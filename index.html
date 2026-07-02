@@ -401,26 +401,124 @@
     .pcol-body { min-height:60px; }
   }
 
-  /* ── flavor tiles ── */
-  .grid4 { margin-top:38px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-  @media (max-width:900px){ .grid4 { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:480px){ .grid4 { grid-template-columns:1fr; } }
-  .tile {
+  /* ── board type showcase (3 rich previews) ── */
+  .grid3 {
+    margin-top:42px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+  }
+  @media (max-width:960px) { .grid3 { grid-template-columns:1fr; } }
+  .bp {
     position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
-    padding:18px; overflow:hidden; transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
+    padding:26px 24px 22px; overflow:hidden;
+    display:flex; flex-direction:column;
+    transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
   }
-  .tile:hover { transform:translateY(-3px); box-shadow:var(--sh-2); border-color:var(--border-strong); }
-  .tile::after {
+  .bp:hover { transform:translateY(-3px); box-shadow:var(--sh-2); border-color:var(--border-strong); }
+  .bp::after {
     content:""; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .3s;
-    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--text) 6%, transparent), transparent 70%);
+    background:radial-gradient(280px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--text) 5%, transparent), transparent 70%);
   }
-  .tile:hover::after { opacity:1; }
-  .tile .glyph { height:60px; display:flex; align-items:flex-end; gap:5px; margin-bottom:14px; }
-  .tile .glyph i { display:block; width:12px; border-radius:4px; background:var(--surface-3); border:1px solid var(--border); height:var(--h,24px); transition:height .5s cubic-bezier(.22,1,.36,1), background .3s; }
-  .tile:hover .glyph i { height:var(--hh,var(--h)); }
-  .tile:hover .glyph i.hot { background:var(--accent); border-color:var(--accent); }
-  .tile h3 { margin:0; font-size:14px; font-weight:600; letter-spacing:-.015em; }
-  .tile p { margin:5px 0 0; font-size:12.5px; color:var(--text-muted); line-height:1.6; }
+  .bp:hover::after { opacity:1; }
+  .bp-tag {
+    font-family:var(--mono); font-size:10.5px; color:var(--text-subtle);
+    letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px;
+  }
+  .bp h3 {
+    margin:0; font-size:18px; font-weight:600; letter-spacing:-.02em; line-height:1.22;
+  }
+  .bp .bp-desc { margin:8px 0 0; color:var(--text-muted); font-size:13px; line-height:1.55; }
+
+  .bp-frame {
+    margin:20px 0 18px;
+    background:var(--app); border:1px solid var(--border); border-radius:var(--r);
+    padding:12px 10px; position:relative; overflow:hidden;
+  }
+  .bp-cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
+  .bp-col { padding:0 6px; min-height:160px; }
+  .bp-col + .bp-col { border-left:1px solid var(--border); }
+  .bp-col-head {
+    display:flex; align-items:center; gap:5px;
+    font-size:9.5px; font-weight:600; color:var(--text-muted);
+    padding-bottom:9px; white-space:nowrap; text-align:left;
+  }
+  .bp-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:6px 7px; margin-bottom:5px; box-shadow:var(--sh-1); text-align:left;
+    transition:transform .15s;
+  }
+  .bp-card.ghost { opacity:.55; }
+  .bp-card.hot { transform:scale(1.02); border-color:var(--border-strong); box-shadow:var(--sh-2); }
+  .bp-card .kt { font-size:10.5px; font-weight:500; line-height:1.3; }
+  .bp-card .km { display:flex; align-items:center; gap:4px; margin-top:5px; flex-wrap:wrap; }
+  .bp-card .km .tag { font-size:8.5px; padding:1px 5px; }
+  .bp-card .km .kid { font-size:8.5px; }
+  .bp-card-foot {
+    display:flex; align-items:center; justify-content:space-between; margin-top:6px;
+    gap:6px;
+  }
+  .avs { display:flex; align-items:center; }
+  .av-mini {
+    height:16px; width:16px; border-radius:3px; object-fit:cover;
+    border:1.5px solid var(--surface); margin-left:-4px; background:var(--surface-2);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:8px; font-weight:700; color:var(--text);
+  }
+  .av-mini:first-child { margin-left:0; }
+  .av-mini.tester { background:color-mix(in srgb, var(--blue) 14%, var(--surface-2)); color:var(--blue); }
+  .bp-card-foot .kid-mono { font-size:9px; color:var(--text-subtle); font-family:var(--mono); }
+
+  .upvote {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r);
+    padding:3px 7px 3px 6px; font-size:10px; font-weight:600; color:var(--text);
+    cursor:pointer; font-family:inherit; user-select:none;
+    transition:background .12s, transform .18s cubic-bezier(.34,1.6,.64,1), color .12s;
+  }
+  .upvote:hover { background:var(--surface-3); }
+  .upvote:active { transform:scale(.94); }
+  .upvote.voted { background:color-mix(in srgb, var(--success) 14%, var(--surface-2)); color:var(--success); border-color:color-mix(in srgb, var(--success) 32%, var(--border)); }
+  .upvote svg { height:8px; width:8px; }
+  .upvote.pulse { animation:vpulse .5s ease-out; }
+  @keyframes vpulse { 0%{ transform:scale(1); } 40%{ transform:scale(1.16); } 100%{ transform:scale(1); } }
+
+  .bp-features {
+    margin-top:auto; padding-top:16px; border-top:1px solid var(--border);
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .bp-feat {
+    display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--text-muted); line-height:1.45;
+    text-align:left;
+  }
+  .bp-feat .check {
+    color:var(--success); font-weight:700; font-size:10.5px; margin-top:2px; flex:none;
+    display:inline-flex; align-items:center; justify-content:center; height:14px; width:14px;
+    background:color-mix(in srgb, var(--success) 12%, transparent); border-radius:99px;
+  }
+  .bp-feat b { color:var(--text); font-weight:500; }
+
+  .bp-badge-agent {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:99px;
+    padding:2px 7px 2px 4px; font-size:9.5px; color:var(--text-muted); font-weight:500;
+  }
+  .bp-badge-agent img { height:12px; width:12px; border-radius:2px; }
+
+  /* invite pill for beta preview */
+  .bp-invite {
+    position:absolute; right:14px; top:14px; z-index:2;
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--surface); border:1px solid var(--border-strong); border-radius:99px;
+    padding:3px 9px 3px 7px; font-size:9.5px; color:var(--text-muted); font-weight:500;
+    box-shadow:var(--sh-1);
+  }
+  .bp-invite svg { height:10px; width:10px; }
+
+  .bp-public {
+    position:absolute; right:14px; top:14px; z-index:2;
+    font-size:9.5px; font-weight:500; color:var(--blue);
+    border:1px solid color-mix(in srgb,var(--blue) 35%,transparent);
+    background:color-mix(in srgb,var(--blue) 8%,transparent);
+    padding:2px 8px; border-radius:999px;
+  }
 
   /* ── details tiles ── */
   .grid2x2 { margin-top:38px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
@@ -724,28 +822,216 @@
     <p class="play-tip">tip: "Done" has confetti. just saying.</p>
   </section>
 
-  <!-- ═══ FLAVORS ═══ -->
+  <!-- ═══ THREE BOARD TYPES ═══ -->
   <section class="block rv" id="boards">
-    <span class="kicker" data-scramble>One canvas, four flows</span>
-    <h2>Everything is a board.</h2>
-    <p class="lede">No modules, no plugins, no seventeen views. Pick a flavor and start dragging. Every board stays this fast and this quiet.</p>
-    <div class="grid4" id="tiles">
-      <div class="tile">
-        <div class="glyph" aria-hidden="true"><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:32px;--hh:20px"></i><i style="--h:22px;--hh:38px"></i></div>
-        <h3>Tasks</h3><p>A personal kanban that stays out of your way. Todo, doing, done. With confetti when it counts.</p>
+    <span class="kicker" data-scramble>Three board types</span>
+    <h2>One canvas, three ways to ship.</h2>
+    <p class="lede">Every board is a kanban. Each one knows the details the others don't need. Pick the type, invite who matters, start shipping.</p>
+
+    <div class="grid3">
+
+      <!-- 01 · Beta Testing -->
+      <div class="bp" id="bpBeta">
+        <div class="bp-tag">01 · Beta testing</div>
+        <h3>Bugs, testers, agents.<br/>All in one place.</h3>
+        <p class="bp-desc">Ship a build, invite testers by email to any phase, and let Claude Code or Codex pick up the bugs. Screenshots, intensity, repro included.</p>
+
+        <div class="bp-frame">
+          <div class="bp-invite" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+            invite tester by email
+          </div>
+          <div class="bp-cols">
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig danger"></span>Identified</div>
+              <div class="bp-card">
+                <div class="kt">Login redirect loop</div>
+                <div class="km"><span class="tag bug">Bug</span><span class="tag p0">High</span></div>
+                <div class="bp-card-foot">
+                  <div class="avs">
+                    <img class="av-mini" src="assets/claudecode-color.png" alt="Claude Code" title="Claude Code" />
+                    <span class="av-mini tester" title="Tester">T</span>
+                  </div>
+                  <span class="kid-mono">#42</span>
+                </div>
+              </div>
+              <div class="bp-card">
+                <div class="kt">Empty state flashes on load</div>
+                <div class="km"><span class="tag ui">UI</span></div>
+                <div class="bp-card-foot">
+                  <div class="avs">
+                    <span class="av-mini tester">A</span>
+                  </div>
+                  <span class="kid-mono">#39</span>
+                </div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig warning"></span>Verified</div>
+              <div class="bp-card">
+                <div class="kt">Board rename loses focus</div>
+                <div class="km"><span class="tag bug">Bug</span></div>
+                <div class="bp-card-foot">
+                  <div class="avs">
+                    <img class="av-mini" src="assets/codex.webp" alt="Codex" title="Codex" />
+                    <span class="av-mini tester">T</span>
+                    <span class="av-mini tester">R</span>
+                  </div>
+                  <span class="kid-mono">#41</span>
+                </div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig success"></span>Shipped</div>
+              <div class="bp-card ghost">
+                <div class="kt">Dark mode contrast</div>
+                <div class="km"><span class="tag ui">UI</span></div>
+                <div class="bp-card-foot">
+                  <div class="avs">
+                    <img class="av-mini" src="assets/claudecode-color.png" alt="Claude Code" />
+                  </div>
+                  <span class="kid-mono">#36</span>
+                </div>
+              </div>
+              <div class="bp-card ghost">
+                <div class="kt">Invite link expires early</div>
+                <div class="km"><span class="tag bug">Bug</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-features">
+          <span class="bp-feat"><span class="check">✓</span><span>Invite testers by email to <b>any phase</b> — Testing, Identified, Verified, Shipped.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Claude Code + Codex work the board via <b>MCP</b>.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Screenshots, intensity, and repro attached to every card.</span></span>
+        </div>
       </div>
-      <div class="tile">
-        <div class="glyph" aria-hidden="true"><i style="--h:22px;--hh:36px"></i><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:32px;--hh:18px"></i></div>
-        <h3>Tickets</h3><p>Triage incoming work with severity, categories and owners, without the enterprise ceremony.</p>
+
+      <!-- 02 · Roadmap -->
+      <div class="bp" id="bpRoadmap">
+        <div class="bp-tag">02 · Roadmap</div>
+        <h3>Users vote.<br/>Priorities decide themselves.</h3>
+        <p class="bp-desc">Show what's coming, share the link publicly, and let real users upvote what they actually want. The most-loved ideas rise to the top on their own.</p>
+
+        <div class="bp-frame">
+          <span class="bp-public" aria-hidden="true">Public · shareable link</span>
+          <div class="bp-cols">
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig" style="background:var(--text-subtle)"></span>Ideas</div>
+              <div class="bp-card">
+                <div class="kt">Native mobile app</div>
+                <div class="bp-card-foot">
+                  <button class="upvote" data-count="891" type="button">
+                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                    <span class="upvote-n">891</span>
+                  </button>
+                </div>
+              </div>
+              <div class="bp-card">
+                <div class="kt">Recurring tasks</div>
+                <div class="bp-card-foot">
+                  <button class="upvote" data-count="412" type="button">
+                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                    <span class="upvote-n">412</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig warning"></span>Planned</div>
+              <div class="bp-card">
+                <div class="kt">Slack integration</div>
+                <div class="bp-card-foot">
+                  <button class="upvote" data-count="128" type="button">
+                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                    <span class="upvote-n">128</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig success"></span>Shipped</div>
+              <div class="bp-card ghost">
+                <div class="kt">Public boards</div>
+                <div class="bp-card-foot">
+                  <button class="upvote voted" data-count="256" type="button">
+                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                    <span class="upvote-n">256</span>
+                  </button>
+                </div>
+              </div>
+              <div class="bp-card ghost">
+                <div class="kt">Dark mode</div>
+                <div class="bp-card-foot">
+                  <button class="upvote voted" data-count="342" type="button">
+                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                    <span class="upvote-n">342</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-features">
+          <span class="bp-feat"><span class="check">✓</span><span>Public upvotes, <b>no login required</b> — anyone with the link can vote.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Ideas <b>auto-sort by demand</b>, so your priorities reflect reality.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Ships to a live URL you can drop in a tweet or a footer.</span></span>
+        </div>
       </div>
-      <div class="tile">
-        <div class="glyph" aria-hidden="true"><i style="--h:32px;--hh:20px"></i><i style="--h:22px;--hh:34px"></i><i class="hot" style="--h:50px;--hh:56px"></i></div>
-        <h3>Roadmaps</h3><p>Now, next, later. Share it publicly and let users watch ideas travel to shipped.</p>
+
+      <!-- 03 · Tasks & Pipelines -->
+      <div class="bp" id="bpTasks">
+        <div class="bp-tag">03 · Tasks &amp; pipelines</div>
+        <h3>Simple kanban.<br/>Sales pipeline. Anything.</h3>
+        <p class="bp-desc">A quiet board that stays out of the way. Run it as a task list, a lead pipeline, or your own custom flow — any phases you want, drag between them.</p>
+
+        <div class="bp-frame">
+          <div class="bp-cols">
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig" style="background:var(--text-subtle)"></span>Todo</div>
+              <div class="bp-card">
+                <div class="kt">Design empty states</div>
+                <div class="km"><span class="tag ui">UI</span><span class="kid">#4</span></div>
+              </div>
+              <div class="bp-card">
+                <div class="kt">Kill the modal maze</div>
+                <div class="km"><span class="tag feat">Feature</span><span class="kid">#7</span></div>
+              </div>
+              <div class="bp-card">
+                <div class="kt">Water the plants</div>
+                <div class="km"><span class="kid">#8</span></div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig warning"></span>Doing</div>
+              <div class="bp-card">
+                <div class="kt">Ship the landing page</div>
+                <div class="km"><span class="tag feat">Feature</span><span class="kid">#12</span></div>
+              </div>
+            </div>
+            <div class="bp-col">
+              <div class="bp-col-head"><span class="sig success"></span>Done</div>
+              <div class="bp-card ghost">
+                <div class="kt">Pick a very good name</div>
+                <div class="km"><span class="tag feat">Feature</span><span class="kid">#1</span></div>
+              </div>
+              <div class="bp-card ghost">
+                <div class="kt">Register the domain</div>
+                <div class="km"><span class="kid">#2</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-features">
+          <span class="bp-feat"><span class="check">✓</span><span>Personal or team — invite anyone, or keep it to yourself.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Or run it as a <b>sales pipeline</b> — Cold → Contacted → Qualified → Closed.</span></span>
+          <span class="bp-feat"><span class="check">✓</span><span>Custom phases, custom tags, confetti when a card lands in Done.</span></span>
+        </div>
       </div>
-      <div class="tile">
-        <div class="glyph" aria-hidden="true"><i class="hot" style="--h:42px;--hh:30px"></i><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:26px;--hh:40px"></i></div>
-        <h3>Beta testing</h3><p>Collect bugs from testers with screenshots and intensity, then hand them straight to an agent.</p>
-      </div>
+
     </div>
   </section>
 
@@ -922,7 +1208,7 @@
 
   /* ═══ spotlight tiles ═══ */
   if (finePointer) {
-    $$(".tile, .dtile").forEach(function (t) {
+    $$(".bp, .dtile").forEach(function (t) {
       t.addEventListener("mousemove", function (e) {
         var r = t.getBoundingClientRect();
         t.style.setProperty("--mx", (e.clientX - r.left) + "px");
@@ -930,6 +1216,22 @@
       });
     });
   }
+
+  /* ═══ roadmap upvotes (real click, count goes up, pulse, sticks) ═══ */
+  $$(".upvote").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      var nEl = btn.querySelector(".upvote-n");
+      var n = parseInt(nEl.textContent.replace(/,/g, ""), 10) || 0;
+      if (btn.classList.contains("voted")) {
+        btn.classList.remove("voted"); n = Math.max(0, n - 1);
+      } else {
+        btn.classList.add("voted"); n = n + 1;
+      }
+      nEl.textContent = n.toLocaleString();
+      btn.classList.remove("pulse"); void btn.offsetWidth; btn.classList.add("pulse");
+    });
+  });
 
   /* ═══ confetti ═══ */
   var cv = $("#confettiCanvas"), cx = cv.getContext("2d"), parts = [];
