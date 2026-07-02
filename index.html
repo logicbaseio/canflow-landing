@@ -401,7 +401,265 @@
     .pcol-body { min-height:60px; }
   }
 
-  /* ── board type showcase (3 rich previews) ── */
+  /* ── DARK board showcase (three stacked rows, live animations) ── */
+  .showcase-dark {
+    position:relative; margin-top:120px;
+    padding:96px 0 108px;
+    background:#0a0a0c; color:#e5e5e8;
+    overflow:hidden;
+  }
+  .showcase-dark::before {
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background-image:radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+    background-size:24px 24px;
+    -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, black, transparent);
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, black, transparent);
+  }
+  .showcase-dark .wrap { position:relative; z-index:2; }
+  .showcase-dark .kicker { color:#6a6a72; }
+  .showcase-dark h2 { color:#f5f5f7; }
+  .showcase-dark .lede { color:#a3a3ab; max-width:56ch; }
+
+  .tbrow {
+    display:grid; grid-template-columns:5fr 7fr; gap:56px; align-items:center;
+    padding:72px 0;
+  }
+  .tbrow + .tbrow { border-top:1px solid rgba(255,255,255,.07); }
+  .tbrow.reverse { grid-template-columns:7fr 5fr; }
+  .tbrow.reverse .tbrow-copy { order:2; }
+  .tbrow.reverse .tbrow-preview { order:1; }
+  @media (max-width:960px) {
+    .tbrow, .tbrow.reverse { grid-template-columns:1fr; gap:36px; padding:56px 0; }
+    .tbrow.reverse .tbrow-copy, .tbrow.reverse .tbrow-preview { order:unset; }
+  }
+
+  .tbrow-tag {
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:#6a6a72; margin-bottom:16px; display:inline-flex; align-items:center; gap:8px;
+  }
+  .tbrow-tag .n { color:#f5f5f7; font-weight:600; }
+  .tbrow-copy h3 {
+    margin:0; font-size:clamp(28px, 3.4vw, 40px);
+    font-weight:600; letter-spacing:-.035em; line-height:1.05;
+    color:#f5f5f7;
+  }
+  .tbrow-copy .body {
+    margin:18px 0 0; font-size:15.5px; line-height:1.65; color:#a3a3ab;
+    max-width:44ch;
+  }
+  .tbrow-copy .body b { color:#f5f5f7; font-weight:500; }
+  .tbrow-features {
+    list-style:none; padding:0; margin:24px 0 0;
+    display:flex; flex-direction:column; gap:11px;
+  }
+  .tbrow-features li {
+    display:flex; align-items:flex-start; gap:11px;
+    font-size:13.5px; line-height:1.55; color:#c5c5cc;
+  }
+  .tbrow-features li .fdot {
+    height:6px; width:6px; border-radius:99px; background:#4cbd8b;
+    margin-top:8px; flex:none;
+    box-shadow:0 0 12px 2px rgba(76,189,139,.35);
+  }
+  .tbrow-features li b { color:#f5f5f7; font-weight:500; }
+
+  /* preview frame (dark) */
+  .db-frame {
+    position:relative; background:#14141a;
+    border:1px solid rgba(255,255,255,.08); border-radius:5px; overflow:hidden;
+    box-shadow:0 30px 90px -30px rgba(0,0,0,.85), 0 8px 28px -8px rgba(0,0,0,.55);
+  }
+  .db-frame::before {
+    content:""; position:absolute; inset:-1px; border-radius:5px; pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%);
+    mix-blend-mode:overlay;
+  }
+  .db-bar {
+    display:flex; align-items:center; gap:9px;
+    padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.07);
+    background:#181820;
+    font-size:11.5px; color:#a3a3ab;
+    position:relative; z-index:2;
+  }
+  .db-bar .traffic { display:flex; gap:6px; }
+  .db-bar .traffic i { height:9px; width:9px; border-radius:99px; background:rgba(255,255,255,.13); }
+  .db-bar .crumb { display:flex; align-items:center; gap:7px; margin-left:6px; }
+  .db-bar .crumb svg { flex:none; }
+  .db-bar .badge {
+    margin-left:auto; font-size:10px; font-weight:500;
+    padding:2px 8px; border-radius:99px;
+    background:rgba(47,111,235,.14); color:#7aa7f7;
+    border:1px solid rgba(47,111,235,.3);
+  }
+  .db-bar .badge.live {
+    background:rgba(76,189,139,.14); color:#7ed4a8;
+    border-color:rgba(76,189,139,.32);
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .db-bar .badge.live .dot {
+    height:5px; width:5px; border-radius:99px; background:#7ed4a8;
+    animation:livePulse 1.6s ease-out infinite;
+  }
+  @keyframes livePulse {
+    0% { box-shadow:0 0 0 0 rgba(126,212,168,.5); }
+    70% { box-shadow:0 0 0 6px rgba(126,212,168,0); }
+    100% { box-shadow:0 0 0 0 rgba(126,212,168,0); }
+  }
+
+  .db-board { position:relative; background:#0e0e13; min-height:280px; padding:0; }
+  .db-cols {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0;
+    min-height:280px;
+  }
+  .db-cols.c3 { grid-template-columns:1fr 1fr 1fr; }
+  .db-col { padding:14px 12px; position:relative; }
+  .db-col + .db-col { border-left:1px solid rgba(255,255,255,.06); }
+  .db-col-head {
+    display:flex; align-items:center; gap:7px;
+    font-size:10.5px; font-weight:600; color:#a3a3ab;
+    padding:0 2px 10px; white-space:nowrap;
+  }
+  .db-col-head .cnt {
+    margin-left:auto; color:#6a6a72; font-weight:500; font-size:10px;
+    font-variant-numeric:tabular-nums;
+  }
+  .db-col-head .sig { display:inline-block; height:7px; width:7px; border-radius:2px; flex:none; }
+
+  .db-card {
+    background:#1c1c24; border:1px solid rgba(255,255,255,.08);
+    border-radius:5px; padding:8px 10px; margin-bottom:6px;
+    color:#e5e5e8; box-shadow:0 2px 6px -2px rgba(0,0,0,.4);
+    transition:transform .6s cubic-bezier(.22,1,.36,1), box-shadow .3s, border-color .3s, opacity .4s;
+    position:relative;
+  }
+  .db-card.lifted {
+    box-shadow:0 12px 32px -8px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.15);
+    z-index:5;
+  }
+  .db-card .kt { font-size:11px; font-weight:500; line-height:1.35; color:#f5f5f7; }
+  .db-card .km {
+    display:flex; align-items:center; gap:5px; margin-top:7px; flex-wrap:wrap;
+  }
+  .db-card .km .tag { font-size:8.5px; padding:1px 5px; }
+  .db-card .km .kid {
+    font-family:var(--mono); font-size:9px; color:#6a6a72; margin-left:auto;
+  }
+  .db-card.ghost { opacity:.45; }
+  .db-card-foot {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:7px; gap:6px;
+  }
+  .db-card .kt .check-in { color:#4cbd8b; margin-right:2px; opacity:0; transition:opacity .3s; }
+  .db-card.done .kt .check-in { opacity:1; }
+
+  /* avatars */
+  .db-avs { display:flex; align-items:center; }
+  .db-av {
+    height:16px; width:16px; border-radius:3px;
+    border:1.5px solid #1c1c24; margin-left:-4px;
+    background:#2a2a34; color:#e5e5e8;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:8px; font-weight:700; overflow:hidden;
+    transition:transform .3s cubic-bezier(.34,1.6,.64,1), opacity .3s;
+  }
+  .db-av:first-child { margin-left:0; }
+  .db-av img { height:100%; width:100%; object-fit:cover; }
+  .db-av.tester { background:rgba(47,111,235,.2); color:#7aa7f7; }
+  .db-av.pop { transform:scale(1.3); }
+  .db-av.new { animation:avNew .5s cubic-bezier(.34,1.6,.64,1); }
+  @keyframes avNew {
+    0% { transform:scale(0); opacity:0; }
+    100% { transform:scale(1); opacity:1; }
+  }
+
+  /* dark upvote */
+  .db-upvote {
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    border-radius:5px; padding:3px 8px 3px 7px;
+    font-size:10px; font-weight:600; color:#f5f5f7;
+    cursor:pointer; user-select:none; font-family:inherit;
+    transition:background .12s, border-color .12s, transform .18s cubic-bezier(.34,1.6,.64,1);
+    font-variant-numeric:tabular-nums;
+  }
+  .db-upvote svg { height:8px; width:8px; }
+  .db-upvote:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.16); }
+  .db-upvote.voted {
+    background:rgba(76,189,139,.14); color:#7ed4a8; border-color:rgba(76,189,139,.32);
+  }
+  .db-upvote.pulse { animation:vpulse .55s ease-out; }
+  .db-upvote .voter-pop {
+    position:absolute; height:14px; width:14px; border-radius:99px;
+    background:#7aa7f7; color:#0a0a0c; font-size:8px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+    top:-6px; right:-6px; box-shadow:0 2px 6px rgba(0,0,0,.5);
+    opacity:0; transform:scale(.5);
+  }
+  .db-upvote.showvoter .voter-pop {
+    animation:voterFly 1s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes voterFly {
+    0% { opacity:0; transform:translate(0, 6px) scale(.5); }
+    30% { opacity:1; transform:translate(0, -4px) scale(1); }
+    100% { opacity:0; transform:translate(0, -18px) scale(.9); }
+  }
+
+  /* tester "typing" bubble in beta preview */
+  .db-typing {
+    position:absolute; left:14px; bottom:14px; z-index:6;
+    display:flex; align-items:center; gap:8px;
+    background:#181820; border:1px solid rgba(255,255,255,.08);
+    border-radius:5px; padding:8px 11px;
+    font-size:11px; color:#c5c5cc;
+    box-shadow:0 12px 28px -8px rgba(0,0,0,.5);
+    opacity:0; transform:translateY(6px);
+    transition:opacity .35s, transform .35s cubic-bezier(.22,1,.36,1);
+    max-width:60%;
+  }
+  .db-typing.on { opacity:1; transform:none; }
+  .db-typing b { color:#f5f5f7; font-weight:500; }
+  .db-typing .dots { display:inline-flex; gap:2px; }
+  .db-typing .dots i {
+    height:4px; width:4px; border-radius:99px; background:#6a6a72;
+    animation:typingDot 1s ease-in-out infinite;
+  }
+  .db-typing .dots i:nth-child(2) { animation-delay:.15s; }
+  .db-typing .dots i:nth-child(3) { animation-delay:.3s; }
+  @keyframes typingDot { 0%,80%,100%{opacity:.3;transform:translateY(0)} 40%{opacity:1;transform:translateY(-2px)} }
+
+  /* fresh vote counter in roadmap */
+  .db-voter {
+    position:absolute; z-index:6;
+    display:flex; align-items:center; gap:6px;
+    background:#181820; border:1px solid rgba(76,189,139,.35);
+    border-radius:99px; padding:4px 10px 4px 6px;
+    font-size:11px; color:#c5c5cc; font-family:var(--mono);
+    box-shadow:0 8px 20px -6px rgba(0,0,0,.5);
+    opacity:0;
+  }
+  .db-voter .who {
+    height:16px; width:16px; border-radius:99px; background:#7aa7f7; color:#0a0a0c;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:8px; font-weight:700;
+  }
+  .db-voter b { color:#7ed4a8; font-weight:600; }
+
+  /* confetti burst overlay for tasks preview */
+  .db-boom {
+    position:absolute; pointer-events:none; z-index:7;
+    height:60px; width:60px;
+  }
+  .db-boom i {
+    position:absolute; left:50%; top:50%; height:5px; width:5px; border-radius:99px;
+    opacity:0;
+    transform:translate(-50%, -50%);
+  }
+  @keyframes boomP {
+    0% { opacity:1; transform:translate(-50%, -50%) scale(1); }
+    100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.4); }
+  }
+
+  /* neutralize the old grid3/bp styles */
   .grid3 {
     margin-top:42px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
   }
@@ -822,218 +1080,274 @@
     <p class="play-tip">tip: "Done" has confetti. just saying.</p>
   </section>
 
-  <!-- ═══ THREE BOARD TYPES ═══ -->
-  <section class="block rv" id="boards">
-    <span class="kicker" data-scramble>Three board types</span>
-    <h2>One canvas, three ways to ship.</h2>
-    <p class="lede">Every board is a kanban. Each one knows the details the others don't need. Pick the type, invite who matters, start shipping.</p>
+</main>
 
-    <div class="grid3">
-
-      <!-- 01 · Beta Testing -->
-      <div class="bp" id="bpBeta">
-        <div class="bp-tag">01 · Beta testing</div>
-        <h3>Bugs, testers, agents.<br/>All in one place.</h3>
-        <p class="bp-desc">Ship a build, invite testers by email to any phase, and let Claude Code or Codex pick up the bugs. Screenshots, intensity, repro included.</p>
-
-        <div class="bp-frame">
-          <div class="bp-invite" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
-            invite tester by email
-          </div>
-          <div class="bp-cols">
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig danger"></span>Identified</div>
-              <div class="bp-card">
-                <div class="kt">Login redirect loop</div>
-                <div class="km"><span class="tag bug">Bug</span><span class="tag p0">High</span></div>
-                <div class="bp-card-foot">
-                  <div class="avs">
-                    <img class="av-mini" src="assets/claudecode-color.png" alt="Claude Code" title="Claude Code" />
-                    <span class="av-mini tester" title="Tester">T</span>
-                  </div>
-                  <span class="kid-mono">#42</span>
-                </div>
-              </div>
-              <div class="bp-card">
-                <div class="kt">Empty state flashes on load</div>
-                <div class="km"><span class="tag ui">UI</span></div>
-                <div class="bp-card-foot">
-                  <div class="avs">
-                    <span class="av-mini tester">A</span>
-                  </div>
-                  <span class="kid-mono">#39</span>
-                </div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig warning"></span>Verified</div>
-              <div class="bp-card">
-                <div class="kt">Board rename loses focus</div>
-                <div class="km"><span class="tag bug">Bug</span></div>
-                <div class="bp-card-foot">
-                  <div class="avs">
-                    <img class="av-mini" src="assets/codex.webp" alt="Codex" title="Codex" />
-                    <span class="av-mini tester">T</span>
-                    <span class="av-mini tester">R</span>
-                  </div>
-                  <span class="kid-mono">#41</span>
-                </div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig success"></span>Shipped</div>
-              <div class="bp-card ghost">
-                <div class="kt">Dark mode contrast</div>
-                <div class="km"><span class="tag ui">UI</span></div>
-                <div class="bp-card-foot">
-                  <div class="avs">
-                    <img class="av-mini" src="assets/claudecode-color.png" alt="Claude Code" />
-                  </div>
-                  <span class="kid-mono">#36</span>
-                </div>
-              </div>
-              <div class="bp-card ghost">
-                <div class="kt">Invite link expires early</div>
-                <div class="km"><span class="tag bug">Bug</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bp-features">
-          <span class="bp-feat"><span class="check">✓</span><span>Invite testers by email to <b>any phase</b> — Testing, Identified, Verified, Shipped.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Claude Code + Codex work the board via <b>MCP</b>.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Screenshots, intensity, and repro attached to every card.</span></span>
-        </div>
-      </div>
-
-      <!-- 02 · Roadmap -->
-      <div class="bp" id="bpRoadmap">
-        <div class="bp-tag">02 · Roadmap</div>
-        <h3>Users vote.<br/>Priorities decide themselves.</h3>
-        <p class="bp-desc">Show what's coming, share the link publicly, and let real users upvote what they actually want. The most-loved ideas rise to the top on their own.</p>
-
-        <div class="bp-frame">
-          <span class="bp-public" aria-hidden="true">Public · shareable link</span>
-          <div class="bp-cols">
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig" style="background:var(--text-subtle)"></span>Ideas</div>
-              <div class="bp-card">
-                <div class="kt">Native mobile app</div>
-                <div class="bp-card-foot">
-                  <button class="upvote" data-count="891" type="button">
-                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
-                    <span class="upvote-n">891</span>
-                  </button>
-                </div>
-              </div>
-              <div class="bp-card">
-                <div class="kt">Recurring tasks</div>
-                <div class="bp-card-foot">
-                  <button class="upvote" data-count="412" type="button">
-                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
-                    <span class="upvote-n">412</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig warning"></span>Planned</div>
-              <div class="bp-card">
-                <div class="kt">Slack integration</div>
-                <div class="bp-card-foot">
-                  <button class="upvote" data-count="128" type="button">
-                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
-                    <span class="upvote-n">128</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig success"></span>Shipped</div>
-              <div class="bp-card ghost">
-                <div class="kt">Public boards</div>
-                <div class="bp-card-foot">
-                  <button class="upvote voted" data-count="256" type="button">
-                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
-                    <span class="upvote-n">256</span>
-                  </button>
-                </div>
-              </div>
-              <div class="bp-card ghost">
-                <div class="kt">Dark mode</div>
-                <div class="bp-card-foot">
-                  <button class="upvote voted" data-count="342" type="button">
-                    <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
-                    <span class="upvote-n">342</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bp-features">
-          <span class="bp-feat"><span class="check">✓</span><span>Public upvotes, <b>no login required</b> — anyone with the link can vote.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Ideas <b>auto-sort by demand</b>, so your priorities reflect reality.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Ships to a live URL you can drop in a tweet or a footer.</span></span>
-        </div>
-      </div>
-
-      <!-- 03 · Tasks & Pipelines -->
-      <div class="bp" id="bpTasks">
-        <div class="bp-tag">03 · Tasks &amp; pipelines</div>
-        <h3>Simple kanban.<br/>Sales pipeline. Anything.</h3>
-        <p class="bp-desc">A quiet board that stays out of the way. Run it as a task list, a lead pipeline, or your own custom flow — any phases you want, drag between them.</p>
-
-        <div class="bp-frame">
-          <div class="bp-cols">
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig" style="background:var(--text-subtle)"></span>Todo</div>
-              <div class="bp-card">
-                <div class="kt">Design empty states</div>
-                <div class="km"><span class="tag ui">UI</span><span class="kid">#4</span></div>
-              </div>
-              <div class="bp-card">
-                <div class="kt">Kill the modal maze</div>
-                <div class="km"><span class="tag feat">Feature</span><span class="kid">#7</span></div>
-              </div>
-              <div class="bp-card">
-                <div class="kt">Water the plants</div>
-                <div class="km"><span class="kid">#8</span></div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig warning"></span>Doing</div>
-              <div class="bp-card">
-                <div class="kt">Ship the landing page</div>
-                <div class="km"><span class="tag feat">Feature</span><span class="kid">#12</span></div>
-              </div>
-            </div>
-            <div class="bp-col">
-              <div class="bp-col-head"><span class="sig success"></span>Done</div>
-              <div class="bp-card ghost">
-                <div class="kt">Pick a very good name</div>
-                <div class="km"><span class="tag feat">Feature</span><span class="kid">#1</span></div>
-              </div>
-              <div class="bp-card ghost">
-                <div class="kt">Register the domain</div>
-                <div class="km"><span class="kid">#2</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bp-features">
-          <span class="bp-feat"><span class="check">✓</span><span>Personal or team — invite anyone, or keep it to yourself.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Or run it as a <b>sales pipeline</b> — Cold → Contacted → Qualified → Closed.</span></span>
-          <span class="bp-feat"><span class="check">✓</span><span>Custom phases, custom tags, confetti when a card lands in Done.</span></span>
-        </div>
-      </div>
-
+<!-- ═══ THREE BOARD TYPES (dark, full-bleed, animated) ═══ -->
+<section class="showcase-dark rv" id="boards">
+  <div class="wrap">
+    <div style="text-align:center;max-width:620px;margin:0 auto">
+      <span class="kicker" data-scramble>Three board types</span>
+      <h2 style="margin:12px 0 0;font-size:clamp(30px,4.2vw,44px);font-weight:600;letter-spacing:-.04em;line-height:1.1">One canvas. Three ways to ship.</h2>
+      <p class="lede" style="margin:16px auto 0">Every Canflow board runs the same interface — cards, columns, drag. What changes is what each one <em style="font-style:italic;color:#e5e5e8">knows</em>. Pick the type that matches the work.</p>
     </div>
-  </section>
+
+    <!-- 01 · Beta testing -->
+    <div class="tbrow" id="tbrowBeta">
+      <div class="tbrow-copy">
+        <div class="tbrow-tag"><span class="n">01</span> · Beta testing board</div>
+        <h3>The one place bugs, testers, and agents meet.</h3>
+        <p class="body">
+          Push a beta build and invite testers <b>by email to any phase</b> — whether you want them filing bugs in <em style="color:#f5f5f7">Testing</em>, confirming reports in <em style="color:#f5f5f7">Identified Bug</em>, signing off in <em style="color:#f5f5f7">Verified</em>, or celebrating in <em style="color:#f5f5f7">Shipped</em>. Each card carries the screenshot, the intensity, and the reproduction steps.
+          <br/><br/>
+          Wire in Claude Code or Codex through Canflow's MCP server, and your agents pick up the same cards, patch the code, and drag the ticket across the board themselves. Testers watch a live status page. You watch bugs disappear.
+        </p>
+        <ul class="tbrow-features">
+          <li><span class="fdot"></span><span><b>Email invites to any phase</b> — testers, QA leads, or read-only stakeholders.</span></li>
+          <li><span class="fdot"></span><span><b>Claude Code &amp; Codex via MCP</b> — agents move cards as they work.</span></li>
+          <li><span class="fdot"></span><span><b>Screenshots · intensity · repro</b> attached to every bug automatically.</span></li>
+        </ul>
+      </div>
+      <div class="tbrow-preview">
+        <div class="db-frame">
+          <div class="db-bar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <span class="crumb">
+              <svg width="13" height="13" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#f5f5f7"/><rect x="24" y="24" width="16" height="52" rx="4" fill="#0a0a0c"/><rect x="46" y="24" width="16" height="34" rx="4" fill="#0a0a0c"/><rect x="68" y="24" width="8" height="24" rx="3" fill="#0a0a0c"/></svg>
+              Acme · Beta testing
+            </span>
+            <span class="badge live"><span class="dot"></span>3 testers active</span>
+          </div>
+          <div class="db-board">
+            <div class="db-cols" id="betaCols">
+              <div class="db-col" data-col="testing">
+                <div class="db-col-head"><span class="sig" style="background:#a3a3ab"></span>Testing <span class="cnt">1</span></div>
+              </div>
+              <div class="db-col" data-col="identified">
+                <div class="db-col-head"><span class="sig" style="background:#e36464"></span>Identified <span class="cnt">2</span></div>
+                <div class="db-card" data-card="42">
+                  <div class="kt">Login redirect loop after sign-in</div>
+                  <div class="km"><span class="tag bug">Bug</span><span class="tag p0">High</span><span class="kid">#42</span></div>
+                  <div class="db-card-foot">
+                    <div class="db-avs" data-avs="42">
+                      <span class="db-av tester">T</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="db-card" data-card="39">
+                  <div class="kt">Empty state flashes on load</div>
+                  <div class="km"><span class="tag ui">UI</span><span class="kid">#39</span></div>
+                  <div class="db-card-foot">
+                    <div class="db-avs"><span class="db-av tester">A</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="db-col" data-col="verified">
+                <div class="db-col-head"><span class="sig" style="background:#e0a93e"></span>Verified <span class="cnt">1</span></div>
+                <div class="db-card" data-card="41">
+                  <div class="kt">Board rename loses focus</div>
+                  <div class="km"><span class="tag bug">Bug</span><span class="kid">#41</span></div>
+                  <div class="db-card-foot">
+                    <div class="db-avs">
+                      <span class="db-av"><img src="assets/codex.webp" alt=""/></span>
+                      <span class="db-av tester">T</span>
+                      <span class="db-av tester">R</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="db-col" data-col="shipped">
+                <div class="db-col-head"><span class="sig" style="background:#4cbd8b"></span>Shipped <span class="cnt">2</span></div>
+                <div class="db-card ghost">
+                  <div class="kt">Dark mode contrast on tags</div>
+                  <div class="km"><span class="tag ui">UI</span><span class="kid">#36</span></div>
+                </div>
+                <div class="db-card ghost">
+                  <div class="kt">Invite link expires early</div>
+                  <div class="km"><span class="tag bug">Bug</span><span class="kid">#33</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="db-typing" id="betaTyping">
+              <span class="db-av tester" style="height:18px;width:18px;font-size:9px">T</span>
+              <span><b>Tara</b> just filed <b>#42</b><span class="dots"><i></i><i></i><i></i></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 · Roadmap -->
+    <div class="tbrow reverse" id="tbrowRoadmap">
+      <div class="tbrow-copy">
+        <div class="tbrow-tag"><span class="n">02</span> · Roadmap board</div>
+        <h3>Your users decide what ships next.</h3>
+        <p class="body">
+          Turn a Canflow board into a <b>public roadmap</b> with one click. Phases like <em style="color:#f5f5f7">Ideas</em>, <em style="color:#f5f5f7">Planned</em>, <em style="color:#f5f5f7">In Development</em>, and <em style="color:#f5f5f7">Shipped</em> live on a shareable URL — no signup, no login, no friction.
+          <br/><br/>
+          Anyone with the link can upvote the ideas they actually want. The board sorts itself by demand, so the loudest requests move to the top of Planned on their own. Your priorities stop being guesses. They become math.
+        </p>
+        <ul class="tbrow-features">
+          <li><span class="fdot"></span><span><b>Public upvotes without a login</b> — one shareable URL, real user demand.</span></li>
+          <li><span class="fdot"></span><span><b>Auto-sort by vote count</b> so the roadmap reflects the crowd, not the founder.</span></li>
+          <li><span class="fdot"></span><span><b>Drop it in a tweet or a footer</b> — every visit is free market research.</span></li>
+        </ul>
+      </div>
+      <div class="tbrow-preview">
+        <div class="db-frame">
+          <div class="db-bar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <span class="crumb">
+              <svg width="13" height="13" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#f5f5f7"/><rect x="24" y="24" width="16" height="52" rx="4" fill="#0a0a0c"/><rect x="46" y="24" width="16" height="34" rx="4" fill="#0a0a0c"/><rect x="68" y="24" width="8" height="24" rx="3" fill="#0a0a0c"/></svg>
+              Acme · Public roadmap
+            </span>
+            <span class="badge">canflow.app/r/acme</span>
+          </div>
+          <div class="db-board">
+            <div class="db-cols c3" id="roadmapCols">
+              <div class="db-col">
+                <div class="db-col-head"><span class="sig" style="background:#a3a3ab"></span>Ideas <span class="cnt">2</span></div>
+                <div class="db-card" data-uv="native">
+                  <div class="kt">Native mobile app</div>
+                  <div class="db-card-foot">
+                    <span style="font-size:9.5px;color:#6a6a72">community</span>
+                    <button class="db-upvote" type="button" data-uv-btn>
+                      <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                      <span class="db-uv-n">891</span>
+                      <span class="voter-pop">+1</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="db-card" data-uv="recurring">
+                  <div class="kt">Recurring tasks</div>
+                  <div class="db-card-foot">
+                    <span style="font-size:9.5px;color:#6a6a72">community</span>
+                    <button class="db-upvote" type="button" data-uv-btn>
+                      <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                      <span class="db-uv-n">412</span>
+                      <span class="voter-pop">+1</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="db-col">
+                <div class="db-col-head"><span class="sig" style="background:#e0a93e"></span>Planned <span class="cnt">1</span></div>
+                <div class="db-card" data-uv="slack">
+                  <div class="kt">Slack integration</div>
+                  <div class="db-card-foot">
+                    <span style="font-size:9.5px;color:#6a6a72">Q2 2026</span>
+                    <button class="db-upvote" type="button" data-uv-btn>
+                      <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                      <span class="db-uv-n">128</span>
+                      <span class="voter-pop">+1</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="db-col">
+                <div class="db-col-head"><span class="sig" style="background:#4cbd8b"></span>Shipped <span class="cnt">2</span></div>
+                <div class="db-card ghost">
+                  <div class="kt">Public boards</div>
+                  <div class="db-card-foot">
+                    <span style="font-size:9.5px;color:#6a6a72">v1.4</span>
+                    <button class="db-upvote voted" type="button">
+                      <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                      <span class="db-uv-n">256</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="db-card ghost">
+                  <div class="kt">Dark mode</div>
+                  <div class="db-card-foot">
+                    <span style="font-size:9.5px;color:#6a6a72">v1.3</span>
+                    <button class="db-upvote voted" type="button">
+                      <svg viewBox="0 0 10 10" fill="currentColor"><polygon points="5,1 9,8 1,8"/></svg>
+                      <span class="db-uv-n">342</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="db-voter" id="roadmapVoter">
+              <span class="who">M</span>
+              <span><b>+1</b> from Mira</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 · Tasks & Pipelines -->
+    <div class="tbrow" id="tbrowTasks">
+      <div class="tbrow-copy">
+        <div class="tbrow-tag"><span class="n">03</span> · Task &amp; pipeline board</div>
+        <h3>The quiet kanban that fits how you actually work.</h3>
+        <p class="body">
+          The board most people start with. Run it as your <b>personal task list</b>, your team's <b>sprint board</b>, or repurpose the phases and turn it into a <b>sales pipeline</b> (Cold → Contacted → Qualified → Closed) or anything else you can put in three columns.
+          <br/><br/>
+          Custom phases. Custom tags. Real drag-and-drop. And every card that lands in Done gets confetti — because shipping should feel like something.
+        </p>
+        <ul class="tbrow-features">
+          <li><span class="fdot"></span><span><b>Personal or team</b> — invite people or keep it private.</span></li>
+          <li><span class="fdot"></span><span><b>Custom phases &amp; tags</b> — model tasks, deals, or a lead pipeline in minutes.</span></li>
+          <li><span class="fdot"></span><span><b>Confetti when a card lands in Done.</b> Non-negotiable.</span></li>
+        </ul>
+      </div>
+      <div class="tbrow-preview">
+        <div class="db-frame">
+          <div class="db-bar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <span class="crumb">
+              <svg width="13" height="13" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#f5f5f7"/><rect x="24" y="24" width="16" height="52" rx="4" fill="#0a0a0c"/><rect x="46" y="24" width="16" height="34" rx="4" fill="#0a0a0c"/><rect x="68" y="24" width="8" height="24" rx="3" fill="#0a0a0c"/></svg>
+              This week
+            </span>
+            <span class="badge live"><span class="dot"></span>you, right now</span>
+          </div>
+          <div class="db-board">
+            <div class="db-cols c3" id="tasksCols">
+              <div class="db-col" data-col="todo">
+                <div class="db-col-head"><span class="sig" style="background:#a3a3ab"></span>Todo <span class="cnt">3</span></div>
+                <div class="db-card" data-card="4">
+                  <div class="kt"><span class="check-in">✓</span>Design empty states</div>
+                  <div class="km"><span class="tag ui">UI</span><span class="kid">#4</span></div>
+                </div>
+                <div class="db-card" data-card="7">
+                  <div class="kt"><span class="check-in">✓</span>Kill the modal maze</div>
+                  <div class="km"><span class="tag feat">Feature</span><span class="kid">#7</span></div>
+                </div>
+                <div class="db-card" data-card="8">
+                  <div class="kt"><span class="check-in">✓</span>Water the plants</div>
+                  <div class="km"><span class="kid">#8</span></div>
+                </div>
+              </div>
+              <div class="db-col" data-col="doing">
+                <div class="db-col-head"><span class="sig" style="background:#e0a93e"></span>Doing <span class="cnt">1</span></div>
+                <div class="db-card" data-card="12">
+                  <div class="kt"><span class="check-in">✓</span>Ship the landing page</div>
+                  <div class="km"><span class="tag feat">Feature</span><span class="kid">#12</span></div>
+                </div>
+              </div>
+              <div class="db-col" data-col="done">
+                <div class="db-col-head"><span class="sig" style="background:#4cbd8b"></span>Done <span class="cnt">2</span></div>
+                <div class="db-card ghost">
+                  <div class="kt"><span class="check-in">✓</span>Pick a very good name</div>
+                  <div class="km"><span class="tag feat">Feature</span><span class="kid">#1</span></div>
+                </div>
+                <div class="db-card ghost">
+                  <div class="kt"><span class="check-in">✓</span>Register the domain</div>
+                  <div class="km"><span class="kid">#2</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="db-boom" id="tasksBoom"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<main class="wrap">
 
   <!-- ═══ AGENT SETUP (centered, real logos, live terminal) ═══ -->
   <section class="block rv center" id="agents">
@@ -1217,21 +1531,335 @@
     });
   }
 
-  /* ═══ roadmap upvotes (real click, count goes up, pulse, sticks) ═══ */
-  $$(".upvote").forEach(function (btn) {
+  /* ═══ dark showcase — click upvotes still work ═══ */
+  $$(".db-upvote[data-uv-btn]").forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
-      var nEl = btn.querySelector(".upvote-n");
-      var n = parseInt(nEl.textContent.replace(/,/g, ""), 10) || 0;
-      if (btn.classList.contains("voted")) {
-        btn.classList.remove("voted"); n = Math.max(0, n - 1);
-      } else {
-        btn.classList.add("voted"); n = n + 1;
-      }
-      nEl.textContent = n.toLocaleString();
-      btn.classList.remove("pulse"); void btn.offsetWidth; btn.classList.add("pulse");
+      voteRoadmap(btn, true);
     });
   });
+  function voteRoadmap(btn, isHuman) {
+    var nEl = btn.querySelector(".db-uv-n");
+    var n = parseInt(nEl.textContent.replace(/,/g, ""), 10) || 0;
+    if (isHuman && btn.classList.contains("voted")) {
+      btn.classList.remove("voted"); n = Math.max(0, n - 1);
+    } else {
+      if (isHuman) btn.classList.add("voted");
+      n = n + 1;
+    }
+    nEl.textContent = n.toLocaleString();
+    btn.classList.remove("pulse"); void btn.offsetWidth; btn.classList.add("pulse");
+    btn.classList.remove("showvoter"); void btn.offsetWidth; btn.classList.add("showvoter");
+  }
+
+  /* ═══ dark showcase — Beta board animation (card journeys phases) ═══ */
+  function animateBeta() {
+    if (reduced) return;
+    var board = $("#betaCols"); if (!board) return;
+    var typing = $("#betaTyping");
+    var testing = board.querySelector('[data-col="testing"]');
+    var identified = board.querySelector('[data-col="identified"]');
+    var verified = board.querySelector('[data-col="verified"]');
+    var shipped = board.querySelector('[data-col="shipped"]');
+
+    function makeCard(id, title, tags, avatars) {
+      var d = document.createElement("div");
+      d.className = "db-card"; d.setAttribute("data-card", id);
+      d.innerHTML =
+        '<div class="kt">' + title + '</div>' +
+        '<div class="km">' + tags + '<span class="kid">#' + id + '</span></div>' +
+        '<div class="db-card-foot"><div class="db-avs">' + avatars + '</div></div>';
+      d.style.opacity = "0"; d.style.transform = "translateY(6px)";
+      return d;
+    }
+    function reveal(el, delay) {
+      setTimeout(function () {
+        el.style.transition = "opacity .5s, transform .5s cubic-bezier(.22,1,.36,1)";
+        el.style.opacity = ""; el.style.transform = "";
+      }, delay || 30);
+    }
+
+    function moveCard(card, targetCol, delay) {
+      setTimeout(function () {
+        var first = card.getBoundingClientRect();
+        card.classList.add("lifted");
+        targetCol.appendChild(card);
+        var last = card.getBoundingClientRect();
+        var dx = first.left - last.left, dy = first.top - last.top;
+        card.style.transition = "none";
+        card.style.transform = "translate(" + dx + "px," + dy + "px)";
+        void card.offsetWidth;
+        card.style.transition = "transform .8s cubic-bezier(.22,1,.36,1)";
+        card.style.transform = "";
+        setTimeout(function () {
+          card.classList.remove("lifted");
+        }, 850);
+      }, delay);
+    }
+    function addAvatar(card, av, delay) {
+      setTimeout(function () {
+        var avsEl = card.querySelector(".db-avs");
+        if (!avsEl) return;
+        var s = document.createElement("span");
+        s.className = "db-av new " + (av.type === "tester" ? "tester" : "");
+        if (av.type === "agent") s.innerHTML = '<img src="' + av.src + '" alt=""/>';
+        else s.textContent = av.text;
+        avsEl.appendChild(s);
+      }, delay);
+    }
+    function updateCount(col, n, delay) {
+      setTimeout(function () {
+        var c = col.querySelector(".cnt");
+        if (c) c.textContent = n;
+      }, delay);
+    }
+
+    var t = 0;
+    function loop() {
+      // Reset the board to the initial state (in case cards moved earlier)
+      board.querySelectorAll('[data-card="99"]').forEach(function (n) { n.remove(); });
+
+      // t=200 — Tara starts typing in Testing
+      typing.classList.remove("on"); setTimeout(function () { typing.classList.add("on"); }, 200);
+
+      // t=1400 — a fresh card slides into Testing
+      setTimeout(function () {
+        var card = makeCard("99", "Onboarding tour crashes on step 3", '<span class="tag bug">Bug</span><span class="tag p0">High</span>',
+          '<span class="db-av tester">T</span>');
+        testing.appendChild(card);
+        reveal(card, 0);
+        updateCount(testing, 2, 100);
+      }, 1400);
+
+      // t=2400 — typing bubble hides, card slides from Testing → Identified
+      setTimeout(function () { typing.classList.remove("on"); }, 2400);
+      setTimeout(function () {
+        var card = testing.querySelector('[data-card="99"]');
+        if (card) moveCard(card, identified, 0);
+        updateCount(testing, 1, 100);
+        updateCount(identified, 3, 100);
+      }, 2700);
+
+      // t=3800 — Claude Code joins the card
+      setTimeout(function () {
+        var card = identified.querySelector('[data-card="99"]');
+        if (card) addAvatar(card, { type: "agent", src: "assets/claudecode-color.png" }, 0);
+      }, 3800);
+
+      // t=5200 — card slides Identified → Verified
+      setTimeout(function () {
+        var card = identified.querySelector('[data-card="99"]');
+        if (card) moveCard(card, verified, 0);
+        updateCount(identified, 2, 100);
+        updateCount(verified, 2, 100);
+      }, 5200);
+
+      // t=6600 — R signs off (tester avatar joins)
+      setTimeout(function () {
+        var card = verified.querySelector('[data-card="99"]');
+        if (card) addAvatar(card, { type: "tester", text: "R" }, 0);
+      }, 6600);
+
+      // t=7800 — card slides Verified → Shipped
+      setTimeout(function () {
+        var card = verified.querySelector('[data-card="99"]');
+        if (card) moveCard(card, shipped, 0);
+        updateCount(verified, 1, 100);
+        updateCount(shipped, 3, 100);
+      }, 7800);
+
+      // t=9000 — fade the shipped card (it's "done", card becomes ghost)
+      setTimeout(function () {
+        var card = shipped.querySelector('[data-card="99"]');
+        if (card) card.classList.add("ghost");
+      }, 9000);
+
+      // t=10500 — reset counts, loop
+      setTimeout(function () {
+        var stale = shipped.querySelector('[data-card="99"]');
+        if (stale) stale.remove();
+        updateCount(testing, 1, 0);
+        updateCount(identified, 2, 0);
+        updateCount(verified, 1, 0);
+        updateCount(shipped, 2, 0);
+      }, 10500);
+    }
+    loop();
+    setInterval(loop, 11500);
+  }
+
+  /* ═══ dark showcase — Roadmap board animation (upvotes trickle in) ═══ */
+  function animateRoadmap() {
+    if (reduced) return;
+    var voter = $("#roadmapVoter");
+    var buttons = $$("#roadmapCols .db-upvote[data-uv-btn]");
+    if (!buttons.length) return;
+
+    var VOTERS = [
+      { i: "M", n: "Mira" }, { i: "J", n: "James" }, { i: "P", n: "Priya" },
+      { i: "A", n: "Ava" }, { i: "K", n: "Kenji" }, { i: "L", n: "Leo" },
+      { i: "S", n: "Sam" }, { i: "R", n: "Rosa" }
+    ];
+    var vi = 0;
+
+    function tick() {
+      // pick a random weighted upvote button (native mobile app gets more)
+      var weights = [3, 1, 1]; // native, recurring, slack
+      var pool = [];
+      buttons.forEach(function (b, i) { for (var j = 0; j < (weights[i] || 1); j++) pool.push(b); });
+      var btn = pool[(Math.random() * pool.length) | 0];
+
+      // pop the voter chip near the card
+      var user = VOTERS[vi++ % VOTERS.length];
+      var card = btn.closest(".db-card");
+      var frame = card.closest(".db-frame").getBoundingClientRect();
+      var cr = card.getBoundingClientRect();
+      voter.querySelector(".who").textContent = user.i;
+      voter.querySelector("b").nextSibling.textContent = " from " + user.n;
+      voter.style.left = (cr.left - frame.left + cr.width - 24) + "px";
+      voter.style.top = (cr.top - frame.top - 12) + "px";
+      voter.style.transition = "none";
+      voter.style.opacity = "0";
+      voter.style.transform = "translate(0,6px)";
+      void voter.offsetWidth;
+      voter.style.transition = "opacity .4s, transform .4s cubic-bezier(.22,1,.36,1)";
+      voter.style.opacity = "1";
+      voter.style.transform = "translate(0,0)";
+      setTimeout(function () {
+        voter.style.transition = "opacity .4s, transform .5s cubic-bezier(.22,1,.36,1)";
+        voter.style.opacity = "0";
+        voter.style.transform = "translate(0,-8px)";
+      }, 1400);
+
+      // and increment
+      setTimeout(function () { voteRoadmap(btn, false); }, 300);
+    }
+    setInterval(tick, 2400);
+    setTimeout(tick, 800);
+  }
+
+  /* ═══ dark showcase — Tasks board animation (card march + confetti) ═══ */
+  function animateTasks() {
+    if (reduced) return;
+    var board = $("#tasksCols"); if (!board) return;
+    var boom = $("#tasksBoom");
+    var todo = board.querySelector('[data-col="todo"]');
+    var doing = board.querySelector('[data-col="doing"]');
+    var done = board.querySelector('[data-col="done"]');
+
+    function moveCard(card, target, delay) {
+      setTimeout(function () {
+        var first = card.getBoundingClientRect();
+        card.classList.add("lifted");
+        target.appendChild(card);
+        var last = card.getBoundingClientRect();
+        var dx = first.left - last.left, dy = first.top - last.top;
+        card.style.transition = "none";
+        card.style.transform = "translate(" + dx + "px," + dy + "px) rotate(-2deg)";
+        void card.offsetWidth;
+        card.style.transition = "transform .75s cubic-bezier(.22,1,.36,1)";
+        card.style.transform = "";
+        setTimeout(function () { card.classList.remove("lifted"); }, 800);
+      }, delay);
+    }
+    function updateCount(col, n, delay) {
+      setTimeout(function () { col.querySelector(".cnt").textContent = n; }, delay);
+    }
+    function markDone(card, delay) {
+      setTimeout(function () { card.classList.add("done"); card.classList.add("ghost"); }, delay);
+    }
+    function miniBoom(intoCard, delay) {
+      setTimeout(function () {
+        var frame = boom.parentElement.getBoundingClientRect();
+        var r = intoCard.getBoundingClientRect();
+        boom.style.left = (r.left - frame.left + r.width / 2 - 30) + "px";
+        boom.style.top = (r.top - frame.top - 10) + "px";
+        boom.innerHTML = "";
+        var COLORS = ["#4cbd8b", "#7aa7f7", "#e0a93e", "#e36464", "#f5f5f7"];
+        for (var i = 0; i < 22; i++) {
+          var i2 = document.createElement("i");
+          var a = Math.random() * Math.PI * 2;
+          var sp = 30 + Math.random() * 55;
+          var dx = Math.cos(a) * sp, dy = Math.sin(a) * sp - 20;
+          i2.style.background = COLORS[(Math.random() * COLORS.length) | 0];
+          i2.style.setProperty("--dx", dx + "px");
+          i2.style.setProperty("--dy", dy + "px");
+          i2.style.animation = "boomP 1.1s cubic-bezier(.22,1,.36,1) forwards";
+          boom.appendChild(i2);
+        }
+      }, delay);
+    }
+
+    function loop() {
+      // reset any prior state
+      // step 1 (t=800): "Ship the landing page" (doing) → done + confetti
+      setTimeout(function () {
+        var c = doing.querySelector('[data-card="12"]');
+        if (!c) return;
+        moveCard(c, done, 0);
+        updateCount(doing, 0, 100);
+        updateCount(done, 3, 100);
+        markDone(c, 850);
+        miniBoom(c, 900);
+      }, 800);
+
+      // step 2 (t=2400): "Design empty states" (todo) → doing
+      setTimeout(function () {
+        var c = todo.querySelector('[data-card="4"]');
+        if (!c) return;
+        moveCard(c, doing, 0);
+        updateCount(todo, 2, 100);
+        updateCount(doing, 1, 100);
+      }, 2400);
+
+      // step 3 (t=4000): "Design empty states" → done + confetti
+      setTimeout(function () {
+        var c = doing.querySelector('[data-card="4"]');
+        if (!c) return;
+        moveCard(c, done, 0);
+        updateCount(doing, 0, 100);
+        updateCount(done, 4, 100);
+        markDone(c, 850);
+        miniBoom(c, 900);
+      }, 4400);
+
+      // step 4 (t=5800): reset — restore initial state
+      setTimeout(function () {
+        // reset: put things back
+        var c12 = done.querySelector('[data-card="12"]');
+        var c4 = done.querySelector('[data-card="4"]');
+        if (c12) {
+          c12.classList.remove("done", "ghost");
+          moveCard(c12, doing, 0);
+        }
+        if (c4) {
+          c4.classList.remove("done", "ghost");
+          moveCard(c4, todo, 200);
+        }
+        updateCount(todo, 3, 900);
+        updateCount(doing, 1, 900);
+        updateCount(done, 2, 900);
+      }, 6400);
+    }
+    loop();
+    setInterval(loop, 8200);
+  }
+
+  /* start showcase animations when the section is in view */
+  var showcaseIO = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      showcaseIO.unobserve(e.target);
+      // reveal first
+      e.target.classList.add("in");
+      // stagger the three animations
+      setTimeout(animateBeta, 300);
+      setTimeout(animateRoadmap, 500);
+      setTimeout(animateTasks, 700);
+    });
+  }, { threshold: 0.15 });
+  var showcaseEl = $("#boards");
+  if (showcaseEl) showcaseIO.observe(showcaseEl);
 
   /* ═══ confetti ═══ */
   var cv = $("#confettiCanvas"), cx = cv.getContext("2d"), parts = [];
