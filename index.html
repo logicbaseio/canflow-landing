@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Canflow. Boards that move themselves.</title>
+<meta name="description" content="Canflow. The minimal board for tasks, tickets, roadmaps and beta bugs. Wire in Claude Code or Codex, and the cards start moving without you." />
+<meta property="og:title" content="Canflow" />
+<meta property="og:description" content="Boards that move themselves. Minimal kanban your AI agents can work." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Canflow" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231d1d1f'/><rect x='24' y='24' width='16' height='52' rx='4' fill='white'/><rect x='46' y='24' width='16' height='34' rx='4' fill='white'/><rect x='68' y='24' width='8' height='24' rx='3' fill='white'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ── Canflow tokens ── */
+  :root {
+    --app:#f6f6f7; --surface:#ffffff; --surface-2:#f1f1f2; --surface-3:#eaeaec;
+    --border:rgba(0,0,0,.08); --border-strong:rgba(0,0,0,.14); --stroke-hard:#000;
+    --text:#1d1d1f; --text-muted:#6b6b70; --text-subtle:#9a9aa0;
+    --accent:#1d1d1f; --accent-fg:#fff; --accent-soft:#ececed; --ring:rgba(0,0,0,.16);
+    --blue:#2f6feb; --danger:#d23f3f; --success:#2f9e6f; --warning:#c98a1b;
+    --sh-1:0 1px 2px rgba(0,0,0,.04),0 1px 1px rgba(0,0,0,.03);
+    --sh-2:0 8px 28px -8px rgba(0,0,0,.18),0 2px 6px -2px rgba(0,0,0,.08);
+    --sh-3:0 24px 60px -16px rgba(0,0,0,.28),0 6px 18px -6px rgba(0,0,0,.12);
+    --r:5px;
+    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme: light;
+  }
+  .dark {
+    --app:#161618; --surface:#1e1e21; --surface-2:#26262a; --surface-3:#2f2f34;
+    --border:rgba(255,255,255,.09); --border-strong:rgba(255,255,255,.16); --stroke-hard:#fff;
+    --text:#f3f3f5; --text-muted:#a3a3ab; --text-subtle:#76767e;
+    --accent:#f3f3f5; --accent-fg:#161618; --accent-soft:#2c2c31; --ring:rgba(255,255,255,.22);
+    --blue:#4f8cf0; --danger:#e36464; --success:#4cbd8b; --warning:#e0a93e;
+    --sh-2:0 8px 28px -8px rgba(0,0,0,.55),0 2px 6px -2px rgba(0,0,0,.35);
+    --sh-3:0 24px 60px -16px rgba(0,0,0,.7),0 6px 18px -6px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+
+  * { box-sizing:border-box; border-color:var(--border); }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--app); color:var(--text);
+    font-family:var(--sans); font-size:14px; line-height:1.5; letter-spacing:-.006em;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden;
+  }
+  ::selection { background:var(--accent); color:var(--accent-fg); }
+  a { color:inherit; text-decoration:none; }
+  .mono { font-family:var(--mono); }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  body::after {
+    content:""; position:fixed; inset:-50%; z-index:2000; pointer-events:none; opacity:.028;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── buttons ── */
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border-radius:var(--r); font-size:13px; font-weight:500; height:38px; padding:0 16px;
+    cursor:pointer; user-select:none; border:none; font-family:inherit; letter-spacing:-.006em;
+    transition:opacity .15s, background .15s, transform .18s cubic-bezier(.22,1,.36,1);
+    will-change:transform;
+  }
+  .btn-primary { background:var(--accent); color:var(--accent-fg); }
+  .btn-primary:hover { opacity:.88; }
+  .btn-outline { border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .btn-outline:hover { background:var(--surface-2); }
+
+  /* ── nav ── */
+  nav {
+    position:sticky; top:0; z-index:100;
+    background:color-mix(in srgb, var(--app) 94%, transparent);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:58px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; letter-spacing:-.02em; }
+  .brand svg { height:26px; width:26px; }
+  .nav-right { display:flex; align-items:center; gap:8px; }
+  .icon-btn {
+    display:inline-flex; align-items:center; justify-content:center; height:34px; width:34px;
+    border-radius:var(--r); cursor:pointer; background:transparent; border:none; color:var(--text-muted);
+    transition:background .15s,color .15s;
+  }
+  .icon-btn:hover { background:var(--surface-2); color:var(--text); }
+
+  /* ── HERO: bold type + a floating live board preview ── */
+  .hero { position:relative; padding:88px 0 60px; overflow:hidden; }
+  .hero-dots {
+    position:absolute; inset:0; opacity:.55; pointer-events:none;
+    background-image:radial-gradient(var(--border-strong) 1px, transparent 1px);
+    background-size:22px 22px;
+    -webkit-mask-image:radial-gradient(ellipse 78% 70% at 50% 44%, black, transparent);
+    mask-image:radial-gradient(ellipse 78% 70% at 50% 44%, black, transparent);
+  }
+  .hero-inner { position:relative; z-index:4; text-align:center; }
+
+  .pill {
+    display:inline-flex; align-items:center; gap:7px; border:1px solid var(--border);
+    background:var(--surface); border-radius:999px; padding:5px 12px 5px 8px; font-size:12px;
+    color:var(--text-muted); box-shadow:var(--sh-1);
+  }
+  .pill .dot { height:6px; width:6px; border-radius:999px; background:var(--success); }
+  .sig { display:inline-block; height:7px; width:7px; border-radius:3px; flex:none; }
+  .sig.danger  { background:var(--danger); }
+  .sig.warning { background:var(--warning); }
+  .sig.success { background:var(--success); }
+
+  h1 {
+    margin:28px auto 0; max-width:16ch;
+    font-size:clamp(48px, 8.4vw, 100px); line-height:.98; font-weight:600; letter-spacing:-.055em;
+  }
+  .word-card {
+    display:inline-block; position:relative; background:var(--surface);
+    border:1px solid var(--border-strong); border-radius:var(--r);
+    padding:0 .16em .02em; box-shadow:var(--sh-2);
+    cursor:grab; touch-action:none; will-change:transform; transform:rotate(-2deg);
+  }
+  .word-card:active { cursor:grabbing; }
+  .word-card::before {
+    content:""; position:absolute; left:.16em; top:.14em; height:.09em; width:1em;
+    border-radius:99px; background:var(--blue); opacity:.9;
+  }
+  .hero-sub {
+    margin:28px auto 0; max-width:46ch;
+    font-size:17px; line-height:1.55; color:var(--text-muted);
+  }
+  .hero-ctas { margin-top:32px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .hero-ctas .btn { height:46px; padding:0 24px; font-size:13.5px; }
+  .hero-hint { margin-top:18px; font-family:var(--mono); font-size:11px; color:var(--text-subtle); }
+
+  /* the floating live product preview */
+  .hero-stage {
+    position:relative; margin:76px auto 0; max-width:1000px;
+    perspective:2400px;
+  }
+  .hero-stage::after {
+    content:""; position:absolute; left:50%; bottom:-40px;
+    width:70%; height:80px; transform:translateX(-50%);
+    background:radial-gradient(ellipse at center, color-mix(in srgb, var(--text) 20%, transparent), transparent 70%);
+    filter:blur(24px); z-index:-1; pointer-events:none;
+  }
+  .hero-frame {
+    position:relative;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    box-shadow:var(--sh-3);
+    transform:rotateX(18deg) rotateZ(-0.3deg) translateY(20px);
+    transform-origin:50% 100%;
+    transform-style:preserve-3d;
+    transition:transform 1.4s cubic-bezier(.22,1,.36,1);
+    overflow:hidden;
+    will-change:transform;
+  }
+  .hero-frame.settled { transform:rotateX(6deg) rotateZ(-0.3deg); }
+
+  .hf-bar {
+    display:flex; align-items:center; gap:10px;
+    padding:11px 14px; border-bottom:1px solid var(--border);
+    background:color-mix(in srgb, var(--surface) 60%, var(--app));
+  }
+  .hf-bar .traffic { display:flex; gap:6px; }
+  .hf-bar .traffic i { height:10px; width:10px; border-radius:99px; background:var(--surface-3); }
+  .hf-bar .crumb { margin-left:6px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .hf-bar .badge-public {
+    margin-left:auto; font-size:10.5px; font-weight:500; color:var(--blue);
+    border:1px solid color-mix(in srgb,var(--blue) 35%,transparent);
+    background:color-mix(in srgb,var(--blue) 8%,transparent);
+    padding:2px 8px; border-radius:999px;
+  }
+
+  .hf-board {
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;
+    background:var(--app); min-height:340px;
+    position:relative;
+  }
+  .hf-col { padding:16px; text-align:left; position:relative; }
+  .hf-col + .hf-col { border-left:1px solid var(--border); }
+  .hf-col-head {
+    display:flex; align-items:center; gap:8px;
+    font-size:11.5px; font-weight:600; color:var(--text-muted);
+    padding:0 2px 12px;
+  }
+  .hf-col-head .cnt { margin-left:auto; font-weight:500; color:var(--text-subtle); font-size:11px; }
+  .hf-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:10px 11px; box-shadow:var(--sh-1); margin-bottom:8px;
+  }
+  .hf-card .kt { font-size:12.5px; font-weight:500; line-height:1.35; }
+  .hf-card .km { display:flex; align-items:center; gap:6px; margin-top:8px; }
+  .hf-card.ghost { opacity:.55; }
+  .hf-card.traveler {
+    position:relative; z-index:3; box-shadow:var(--sh-2); border-color:var(--border-strong);
+  }
+  .hf-card.traveler .agent-line {
+    display:flex; align-items:center; gap:6px;
+    margin-top:9px; padding-top:8px; border-top:1px dashed var(--border);
+    font-size:10.5px; color:var(--text-muted); font-weight:500;
+  }
+  .hf-card.traveler .agent-line .spin {
+    height:9px; width:9px; border-radius:99px;
+    border:1.5px solid var(--border-strong); border-top-color:var(--text);
+    animation:rot .8s linear infinite;
+  }
+  .hf-card.traveler .agent-line .check { color:var(--success); font-weight:700; display:none; }
+  .hf-card.traveler.done .spin { display:none; }
+  .hf-card.traveler.done .check { display:inline; }
+  .hf-card.traveler.done .kt::before { content:"✓ "; color:var(--success); }
+
+  .hf-cursor {
+    position:absolute; z-index:5; pointer-events:none; top:0; left:0;
+    transition:transform 1s cubic-bezier(.22,1,.36,1), opacity .3s;
+    opacity:0; transform:translate(0,0);
+  }
+  .hf-cursor.show { opacity:1; }
+  .hf-cursor .lbl {
+    position:absolute; left:16px; top:18px; white-space:nowrap;
+    background:var(--text); color:var(--app);
+    font-size:10px; font-weight:600; padding:3px 8px; border-radius:99px;
+    box-shadow:var(--sh-1);
+    display:flex; align-items:center; gap:5px;
+  }
+  .hf-cursor .lbl img { height:12px; width:12px; border-radius:2px; }
+
+  @media (max-width:760px) {
+    .hero { padding:52px 0 20px; }
+    h1 { max-width:none; font-size:clamp(38px, 11vw, 60px); }
+    .hero-sub { font-size:15px; }
+    .hero-stage { margin-top:44px; perspective:none; padding:0 12px; }
+    .hero-frame { transform:none !important; }
+    .hero-frame.settled { transform:none !important; }
+    .hf-board { grid-template-columns:1fr; min-height:0; }
+    .hf-col + .hf-col { border-left:none; border-top:1px solid var(--border); }
+    .hf-cursor { display:none; }
+  }
+
+  /* ── tags / kids ── */
+  .tag { font-size:9.5px; font-weight:600; padding:1.5px 7px; border-radius:999px; }
+  .tag.bug  { color:var(--danger);  background:color-mix(in srgb,var(--danger) 10%,transparent); }
+  .tag.ui   { color:var(--blue);    background:color-mix(in srgb,var(--blue) 10%,transparent); }
+  .tag.feat { color:var(--success); background:color-mix(in srgb,var(--success) 10%,transparent); }
+  .tag.p0   { color:var(--warning); background:color-mix(in srgb,var(--warning) 12%,transparent); }
+  .kid { font-family:var(--mono); font-size:10px; color:var(--text-subtle); margin-left:auto; }
+
+  /* ── marquee ── */
+  .marquee { border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden; padding:13px 0; background:var(--surface); }
+  .mq-track { display:flex; width:max-content; animation:mq 30s linear infinite; }
+  .mq-track span { font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--text-subtle); white-space:nowrap; padding-right:12px; }
+  .mq-track span b { color:var(--text); font-weight:500; }
+  @keyframes mq { to { transform:translateX(-50%); } }
+
+  /* ── sections ── */
+  section.block { padding:110px 0 0; }
+  .kicker { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text-subtle); }
+  h2 { margin:12px 0 0; font-size:clamp(30px,4.2vw,44px); font-weight:600; letter-spacing:-.04em; line-height:1.1; }
+  .lede { margin:14px 0 0; color:var(--text-muted); font-size:15px; max-width:56ch; line-height:1.7; }
+  .block.center { text-align:center; }
+  .block.center .lede { margin-left:auto; margin-right:auto; }
+
+  /* ── story ── */
+  .story { position:relative; height:440vh; }
+  .story-sticky { position:sticky; top:0; height:100vh; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
+  .story-head { position:relative; height:74px; margin-bottom:18px; }
+  .story-head .ph {
+    position:absolute; inset:0; display:flex; flex-direction:column; gap:5px;
+    opacity:0; transform:translateY(12px); transition:opacity .4s, transform .4s cubic-bezier(.22,1,.36,1);
+  }
+  .story-head .ph.on { opacity:1; transform:none; }
+  .story-head .ph .n { font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--text-subtle); }
+  .story-head .ph .t { font-size:clamp(22px,3vw,32px); font-weight:600; letter-spacing:-.035em; line-height:1.05; }
+
+  .stage {
+    position:relative; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r); box-shadow:var(--sh-3); overflow:hidden;
+  }
+  .stage-bar { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--border); }
+  .stage-bar .traffic { display:flex; gap:6px; }
+  .stage-bar .traffic i { height:10px; width:10px; border-radius:99px; background:var(--surface-3); }
+  .stage-bar .crumb { margin-left:8px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .stage-bar .badge-public {
+    margin-left:auto; font-size:10.5px; font-weight:500; color:var(--blue);
+    border:1px solid color-mix(in srgb,var(--blue) 35%,transparent);
+    background:color-mix(in srgb,var(--blue) 8%,transparent); padding:2px 8px; border-radius:999px;
+  }
+  .stage-body { position:relative; display:grid; grid-template-columns:1fr 1.35fr 1fr; gap:0; background:var(--app); }
+  .station { padding:16px; min-height:308px; }
+  .station + .station { border-left:1px solid var(--border); }
+  .col-head { display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; color:var(--text-muted); padding:0 2px 10px; }
+  .col-head .cnt { margin-left:auto; font-weight:500; color:var(--text-subtle); font-size:11px; }
+  .kcard {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:9px 10px; box-shadow:var(--sh-1); margin-bottom:8px; text-align:left;
+  }
+  .kcard .kt { font-size:12px; font-weight:500; line-height:1.35; }
+  .kcard .km { display:flex; align-items:center; gap:6px; margin-top:7px; flex-wrap:wrap; }
+  .ghost { opacity:.55; }
+  .dock { border:1px dashed transparent; border-radius:var(--r); margin-bottom:8px; transition:border-color .3s; max-width:280px; }
+  .dock.hot { border-color:var(--border-strong); }
+  .st-b .dock { margin-left:auto; margin-right:auto; margin-bottom:12px; width:280px; max-width:100%; }
+
+  .toast {
+    position:absolute; left:14px; bottom:14px; z-index:10; max-width:230px;
+    display:flex; gap:8px; align-items:flex-start;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    box-shadow:var(--sh-2); padding:9px 11px; font-size:11.5px; color:var(--text-muted);
+    opacity:0; transform:translateY(-8px); transition:opacity .4s, transform .4s cubic-bezier(.22,1,.36,1);
+  }
+  .toast.on { opacity:1; transform:none; }
+
+  #storyCard { position:absolute; z-index:8; margin:0; will-change:left,top,transform; }
+  #storyCard .shot {
+    height:44px; border-radius:var(--r); margin-top:8px;
+    background:linear-gradient(120deg, var(--surface-3), var(--surface-2) 55%, var(--surface-3));
+    border:1px solid var(--border); position:relative; overflow:hidden;
+  }
+  #storyCard .shot::after {
+    content:"screenshot.png"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:9px; color:var(--text-subtle); letter-spacing:.04em;
+  }
+  #storyCard .agent-chip {
+    display:none; align-items:center; gap:6px; margin-top:8px; font-size:10px; font-weight:500;
+    color:var(--text-muted); border-top:1px dashed var(--border); padding-top:7px;
+  }
+  #storyCard.working .agent-chip { display:flex; }
+  .agent-chip .spin { height:9px; width:9px; border-radius:99px; border:1.5px solid var(--border-strong); border-top-color:var(--text); animation:rot .8s linear infinite; }
+  .agent-chip .check { display:none; color:var(--success); font-weight:700; }
+  #storyCard.done .agent-chip .spin { display:none; }
+  #storyCard.done .agent-chip .check { display:inline; }
+  #storyCard .kt .tick { display:none; color:var(--success); }
+  #storyCard.done .kt .tick { display:inline; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+
+  .term { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:12px 14px; font-family:var(--mono); font-size:11px; line-height:1.85; min-height:190px; }
+  .term-head { display:flex; align-items:center; gap:8px; font-family:var(--sans); font-size:11px; color:var(--text-subtle); margin-bottom:8px; }
+  .term-head .tabdot { height:6px; width:6px; border-radius:99px; background:var(--success); }
+  .tline { color:var(--text-muted); opacity:0; transform:translateY(4px); transition:opacity .3s, transform .3s; text-align:left; }
+  .tline.show { opacity:1; transform:none; }
+  .tline .p { color:var(--text-subtle); } .tline .c { color:var(--text); font-weight:500; }
+  .tline .g { color:var(--success); } .tline .b { color:var(--blue); } .tline .y { color:var(--warning); }
+
+  .rail { display:flex; align-items:center; gap:0; margin-top:22px; }
+  .rail .rstep { display:flex; align-items:center; gap:9px; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--text-subtle); white-space:nowrap; transition:color .3s; }
+  .rail .rstep.on { color:var(--text); }
+  .rail .rdot { height:9px; width:9px; border-radius:99px; border:1.5px solid var(--border-strong); background:var(--app); transition:background .3s, border-color .3s; }
+  .rail .rstep.on .rdot { background:var(--text); border-color:var(--text); }
+  .rail .rline { flex:1; height:1px; background:var(--border); margin:0 12px; position:relative; overflow:hidden; }
+  .rail .rline i { position:absolute; inset:0; background:var(--text); transform-origin:left; transform:scaleX(0); }
+  .epilogue { margin-top:18px; font-family:var(--mono); font-size:11.5px; color:var(--text-subtle); opacity:0; transform:translateY(8px); transition:opacity .5s, transform .5s; text-align:center; }
+  .epilogue.on { opacity:1; transform:none; }
+  .epilogue b { color:var(--text); font-weight:500; }
+
+  @media (max-width:760px) {
+    .stage-body { grid-template-columns:1fr; }
+    .station { min-height:0; padding:10px 12px; }
+    .station + .station { border-left:none; border-top:1px solid var(--border); }
+    .st-a, .st-c { display:flex; gap:10px; align-items:flex-start; }
+    .st-a .col-head, .st-c .col-head { padding:6px 2px; min-width:86px; }
+    .st-a .dock, .st-c .dock { flex:1; margin:0; }
+    .st-a .ghost, .st-c .ghost { display:none; }
+    #storyCard .shot { display:none; }
+    .term { min-height:0; font-size:10.5px; line-height:1.7; }
+    .tline.m-hide { display:none; }
+    .toast { top:auto; bottom:8px; left:auto; right:12px; max-width:200px; }
+    .story { height:380vh; }
+    .story-sticky { justify-content:flex-start; padding-top:70px; }
+    .story-head { height:52px; margin-bottom:10px; }
+    .story-head .ph .t { font-size:19px; }
+    .rail { margin-top:12px; }
+    .epilogue { margin-top:8px; }
+  }
+
+  /* ── playable board ── */
+  .play { margin-top:40px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh-2); overflow:hidden; }
+  .play-bar { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+  .play-bar .you { margin-left:auto; font-family:var(--mono); font-size:10.5px; color:var(--text-subtle); }
+  .play-body { display:grid; grid-template-columns:repeat(3,1fr); gap:0; background:var(--app); min-height:300px; }
+  .pcol { padding:14px; }
+  .pcol + .pcol { border-left:1px solid var(--border); }
+  .pcol.hot { background:color-mix(in srgb, var(--surface-2) 60%, transparent); }
+  .pcol-body { min-height:180px; }
+  .pcard {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:9px 10px; box-shadow:var(--sh-1); margin-bottom:8px; cursor:grab; user-select:none;
+    touch-action:none; text-align:left;
+  }
+  .pcard:active { cursor:grabbing; }
+  .pcard.drag { position:fixed; z-index:300; box-shadow:var(--sh-3); transform:rotate(-3deg) scale(1.04); pointer-events:none; margin:0; }
+  .pcard .kt { font-size:12px; font-weight:500; line-height:1.35; }
+  .pcard .km { display:flex; align-items:center; gap:6px; margin-top:7px; }
+  .ph-slot { border:1px dashed var(--border-strong); border-radius:var(--r); margin-bottom:8px; }
+  .addcard {
+    width:100%; border:1px dashed var(--border-strong); background:transparent; color:var(--text-subtle);
+    border-radius:var(--r); padding:8px; font-size:12px; font-family:inherit; cursor:pointer; transition:color .15s, background .15s;
+  }
+  .addcard:hover { color:var(--text); background:var(--surface-2); }
+  .play-tip { text-align:center; margin-top:14px; font-family:var(--mono); font-size:11px; color:var(--text-subtle); }
+  @media (max-width:640px) {
+    .play-body { grid-template-columns:1fr; }
+    .pcol + .pcol { border-left:none; border-top:1px solid var(--border); }
+    .pcol-body { min-height:60px; }
+  }
+
+  /* ── flavor tiles ── */
+  .grid4 { margin-top:38px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media (max-width:900px){ .grid4 { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:480px){ .grid4 { grid-template-columns:1fr; } }
+  .tile {
+    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:18px; overflow:hidden; transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
+  }
+  .tile:hover { transform:translateY(-3px); box-shadow:var(--sh-2); border-color:var(--border-strong); }
+  .tile::after {
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .3s;
+    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--text) 6%, transparent), transparent 70%);
+  }
+  .tile:hover::after { opacity:1; }
+  .tile .glyph { height:60px; display:flex; align-items:flex-end; gap:5px; margin-bottom:14px; }
+  .tile .glyph i { display:block; width:12px; border-radius:4px; background:var(--surface-3); border:1px solid var(--border); height:var(--h,24px); transition:height .5s cubic-bezier(.22,1,.36,1), background .3s; }
+  .tile:hover .glyph i { height:var(--hh,var(--h)); }
+  .tile:hover .glyph i.hot { background:var(--accent); border-color:var(--accent); }
+  .tile h3 { margin:0; font-size:14px; font-weight:600; letter-spacing:-.015em; }
+  .tile p { margin:5px 0 0; font-size:12.5px; color:var(--text-muted); line-height:1.6; }
+
+  /* ── details tiles ── */
+  .grid2x2 { margin-top:38px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media (max-width:700px){ .grid2x2 { grid-template-columns:1fr; } }
+  .dtile {
+    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:22px; overflow:hidden; transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s;
+    text-align:left;
+  }
+  .dtile:hover { transform:translateY(-2px); box-shadow:var(--sh-2); border-color:var(--border-strong); }
+  .dtile::after {
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .3s;
+    background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--text) 5%, transparent), transparent 70%);
+  }
+  .dtile:hover::after { opacity:1; }
+  .dtile h3 { margin:0; font-size:14.5px; font-weight:600; letter-spacing:-.015em; display:flex; align-items:center; gap:8px; }
+  .dtile p { margin:6px 0 14px; font-size:12.5px; color:var(--text-muted); line-height:1.6; }
+  .dtile .try { font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--text-subtle); text-transform:uppercase; position:absolute; top:20px; right:20px; }
+  .chipline {
+    display:inline-flex; align-items:center; gap:9px; font-family:var(--mono); font-size:12px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r); padding:8px 12px; color:var(--text-muted);
+    position:relative; z-index:2;
+  }
+  .copy-btn {
+    display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--surface);
+    color:var(--text-muted); border-radius:var(--r); font-size:11px; font-family:var(--sans); padding:4px 9px;
+    cursor:pointer; transition:background .15s,color .15s; position:relative; z-index:2;
+  }
+  .copy-btn:hover { background:var(--surface-2); color:var(--text); }
+  .switch { position:relative; z-index:2; width:40px; height:22px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface-2); cursor:pointer; transition:background .2s; }
+  .switch i { position:absolute; top:2px; left:2px; height:16px; width:16px; border-radius:99px; background:var(--text); transition:left .22s cubic-bezier(.22,1,.36,1); }
+  .switch.on { background:var(--accent-soft); }
+  .switch.on i { left:20px; }
+
+  /* ── agents section (centered) ── */
+  #agents .term-live {
+    margin:40px auto 0; max-width:640px; text-align:left;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh-2);
+    overflow:hidden;
+  }
+  #agents .term-live .th {
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    border-bottom:1px solid var(--border); font-family:var(--sans); font-size:11px; color:var(--text-subtle);
+  }
+  #agents .term-live .th .tabdot { height:6px; width:6px; border-radius:99px; background:var(--success); }
+  #agents .term-live .th .cp { margin-left:auto; }
+  #agents .term-live pre {
+    margin:0; padding:16px 18px; font-family:var(--mono); font-size:12.2px; line-height:1.8;
+    color:var(--text); min-height:170px; white-space:pre-wrap; word-break:break-word;
+  }
+  #agents .term-live .p { color:var(--text-subtle); }
+  #agents .term-live .c { color:var(--text); font-weight:500; }
+  #agents .term-live .g { color:var(--success); }
+  #agents .term-live .b { color:var(--blue); }
+  #agents .term-live .y { color:var(--warning); }
+  #agents .term-live .str { color:var(--success); }
+  #agents .term-live .dim { color:var(--text-subtle); }
+  .caret { display:inline-block; width:8px; height:14px; background:var(--text); vertical-align:-2px; margin-left:1px; animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+
+  .agents-row {
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    margin-top:22px; font-size:12.5px; color:var(--text-subtle); flex-wrap:wrap;
+  }
+  .agents-row .lg { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-weight:500; }
+  .agents-row .lg img { height:20px; width:20px; object-fit:contain; border-radius:4px; }
+
+  /* ── CTA / footer ── */
+  .cta { margin:130px 0 0; text-align:center; position:relative; padding:90px 0 100px; overflow:hidden; }
+  .cta .hero-dots { -webkit-mask-image:radial-gradient(ellipse 60% 85% at 50% 55%, black, transparent); mask-image:radial-gradient(ellipse 60% 85% at 50% 55%, black, transparent); }
+  .cta h2 { font-size:clamp(34px,5vw,54px); letter-spacing:-.045em; }
+  .cta .bars svg { height:56px; width:56px; border-radius:var(--r); box-shadow:var(--sh-2); }
+  .cta .bars svg rect.b1, .cta .bars svg rect.b2, .cta .bars svg rect.b3 { transition:height .6s cubic-bezier(.22,1,.36,1), y .6s cubic-bezier(.22,1,.36,1); }
+  .cta .hero-ctas { justify-content:center; }
+  footer { border-top:1px solid var(--border); padding:26px 0 40px; }
+  .foot-inner { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--text-subtle); }
+  .foot-inner .links { display:flex; gap:18px; }
+  .foot-inner a:hover { color:var(--text); }
+
+  .rv { opacity:0; transform:translateY(16px); transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+  .rv.in { opacity:1; transform:none; }
+
+  #confettiCanvas { position:fixed; inset:0; z-index:1500; pointer-events:none; }
+
+  @media (prefers-reduced-motion:reduce) {
+    * { animation:none !important; transition:none !important; }
+    .rv { opacity:1; transform:none; }
+    .story { height:auto; }
+    .story-sticky { position:static; height:auto; padding:40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="brand" href="#" aria-label="Canflow home">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+      Canflow
+    </a>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg id="iconMoon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a class="btn btn-outline" href="https://canflow.app" style="height:34px">Sign in</a>
+      <a class="btn btn-primary magnet" href="https://canflow.app" style="height:34px">Open app</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO: bold typography + a floating live product preview ═══ -->
+<header class="hero" id="hero">
+  <div class="hero-dots" aria-hidden="true"></div>
+
+  <div class="wrap hero-inner">
+    <span class="pill"><span class="dot"></span>&nbsp;Agents now work your boards, via MCP</span>
+
+    <h1>Boards that <span class="word-card" id="dragWord">move</span> themselves.</h1>
+
+    <p class="hero-sub">
+      The minimal board for tasks, tickets, roadmaps and beta bugs.
+      Wire in Claude Code or Codex, and the cards start moving without you.
+    </p>
+
+    <div class="hero-ctas">
+      <a class="btn btn-primary magnet" href="https://canflow.app">Start for free</a>
+      <a class="btn btn-outline magnet" href="#story">See it move ↓</a>
+    </div>
+
+    <p class="hero-hint">no credit card. thirty-second setup.</p>
+
+    <!-- floating live board preview -->
+    <div class="hero-stage">
+      <div class="hero-frame" id="heroFrame">
+        <div class="hf-bar">
+          <div class="traffic"><i></i><i></i><i></i></div>
+          <span class="crumb">
+            <svg width="13" height="13" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+            Acme · Beta board
+          </span>
+          <span class="badge-public">Public</span>
+        </div>
+        <div class="hf-board">
+          <div class="hf-col" data-col="reported">
+            <div class="hf-col-head"><span class="sig danger"></span>Reported <span class="cnt">2</span></div>
+            <div class="hf-card ghost">
+              <div class="kt">Empty state flashes on load</div>
+              <div class="km"><span class="tag ui">UI</span><span class="kid">#39</span></div>
+            </div>
+            <div class="hf-card ghost">
+              <div class="kt">Board rename loses focus</div>
+              <div class="km"><span class="tag bug">Bug</span><span class="kid">#41</span></div>
+            </div>
+          </div>
+          <div class="hf-col" data-col="doing">
+            <div class="hf-col-head"><span class="sig warning"></span>Fixing <span class="cnt">1</span></div>
+            <div class="hf-card traveler" id="heroTraveler">
+              <div class="kt">Login redirect loop after sign-in</div>
+              <div class="km"><span class="tag bug">Bug</span><span class="tag p0">High</span><span class="kid">#42</span></div>
+              <div class="agent-line">
+                <span class="spin"></span><span class="check">✓</span>
+                <span id="heroAgentLabel">Claude Code is on it</span>
+              </div>
+            </div>
+          </div>
+          <div class="hf-col" data-col="shipped">
+            <div class="hf-col-head"><span class="sig success"></span>Shipped <span class="cnt">3</span></div>
+            <div class="hf-card ghost">
+              <div class="kt">Dark mode contrast on tags</div>
+              <div class="km"><span class="tag ui">UI</span><span class="kid">#36</span></div>
+            </div>
+            <div class="hf-card ghost">
+              <div class="kt">Invite links expire early</div>
+              <div class="km"><span class="tag bug">Bug</span><span class="kid">#33</span></div>
+            </div>
+          </div>
+
+          <div class="hf-cursor" id="heroCursor">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))">
+              <path d="M3 2.5v13.2l3.4-3.4h7.1L3 2.5z" fill="#1d1d1f" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+            <span class="lbl"><img src="assets/claudecode-color.png" alt="" />Claude Code</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true">
+  <div class="mq-track">
+    <span>TASKS&nbsp;&nbsp;·&nbsp;&nbsp;TICKETS&nbsp;&nbsp;·&nbsp;&nbsp;ROADMAPS&nbsp;&nbsp;·&nbsp;&nbsp;BETA&nbsp;BUGS&nbsp;&nbsp;·&nbsp;&nbsp;<b>AGENTS&nbsp;WELCOME</b>&nbsp;&nbsp;·&nbsp;&nbsp;PUBLIC&nbsp;BOARDS&nbsp;&nbsp;·&nbsp;&nbsp;NO&nbsp;SEVENTEEN&nbsp;VIEWS&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+    <span>TASKS&nbsp;&nbsp;·&nbsp;&nbsp;TICKETS&nbsp;&nbsp;·&nbsp;&nbsp;ROADMAPS&nbsp;&nbsp;·&nbsp;&nbsp;BETA&nbsp;BUGS&nbsp;&nbsp;·&nbsp;&nbsp;<b>AGENTS&nbsp;WELCOME</b>&nbsp;&nbsp;·&nbsp;&nbsp;PUBLIC&nbsp;BOARDS&nbsp;&nbsp;·&nbsp;&nbsp;NO&nbsp;SEVENTEEN&nbsp;VIEWS&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+  </div>
+</div>
+
+<!-- ═══ THE STORY (scroll-scrubbed) ═══ -->
+<section class="story" id="story">
+  <div class="story-sticky">
+    <div class="wrap" style="width:100%">
+      <div class="story-head">
+        <div class="ph on" data-ph="0"><span class="n">SCROLL / THE LIFE OF ISSUE #42</span><span class="t">A tester files it.</span></div>
+        <div class="ph" data-ph="1"><span class="n">02 / HANDS-FREE</span><span class="t">Your agent fixes it.</span></div>
+        <div class="ph" data-ph="2"><span class="n">03 / THE BEST PART</span><span class="t">You take the credit.</span></div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="stage-bar">
+          <div class="traffic"><i></i><i></i><i></i></div>
+          <span class="crumb">
+            <svg width="13" height="13" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+            Acme · Beta testing
+          </span>
+          <span class="badge-public">Public</span>
+        </div>
+        <div class="stage-body">
+          <div class="station st-a">
+            <div class="col-head"><span class="sig danger"></span>Reported <span class="cnt">2</span></div>
+            <div class="dock" id="dock0"></div>
+            <div class="kcard ghost"><div class="kt">Board rename loses focus</div><div class="km"><span class="tag bug">Bug</span><span class="kid">#41</span></div></div>
+            <div class="toast" id="testerToast">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-subtle)" stroke-width="2" style="flex:none;margin-top:1px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span><b style="color:var(--text);font-weight:500">tester@beta.acme</b> filed a bug, screenshot attached, intensity high</span>
+            </div>
+          </div>
+          <div class="station st-b">
+            <div class="dock" id="dock1"></div>
+            <div class="term">
+              <div class="term-head"><span class="tabdot"></span> zsh / claude</div>
+              <div id="termLines"></div>
+            </div>
+          </div>
+          <div class="station st-c">
+            <div class="col-head"><span class="sig success"></span>Shipped <span class="cnt">3</span></div>
+            <div class="dock" id="dock2"></div>
+            <div class="kcard ghost"><div class="kt">Invite links expire early</div><div class="km"><span class="tag bug">Bug</span><span class="kid">#33</span></div></div>
+          </div>
+
+          <div class="kcard" id="storyCard">
+            <div class="kt"><span class="tick">✓ </span>Login redirect loop after sign-in</div>
+            <div class="shot"></div>
+            <div class="km"><span class="tag bug">Bug</span><span class="tag p0">High</span><span class="kid">#42</span></div>
+            <div class="agent-chip"><span class="spin"></span><span class="check">✓</span><span id="agentLabel">Claude Code is on it</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail" id="rail">
+        <span class="rstep on" data-r="0"><span class="rdot"></span>REPORTED</span>
+        <span class="rline"><i id="rfill1"></i></span>
+        <span class="rstep" data-r="1"><span class="rdot"></span>AGENT&nbsp;FIXING</span>
+        <span class="rline"><i id="rfill2"></i></span>
+        <span class="rstep" data-r="2"><span class="rdot"></span>SHIPPED</span>
+      </div>
+      <p class="epilogue" id="epilogue">total human input: <b>one sentence.</b></p>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <!-- ═══ PLAYABLE ═══ -->
+  <section class="block rv" id="play">
+    <span class="kicker" data-scramble>Playable demo</span>
+    <h2>Don't take our word for it.<br/>Drag one.</h2>
+    <p class="lede">Not a video. A real board, right here on the landing page. Drag cards between columns, add your own, get a feel for how quiet it is.</p>
+
+    <div class="play">
+      <div class="play-bar">
+        <svg width="13" height="13" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+        Your first board
+        <span class="you">you, just now</span>
+      </div>
+      <div class="play-body" id="playBoard">
+        <div class="pcol" data-col="todo">
+          <div class="col-head"><span class="sig" style="background:var(--text-subtle)"></span>Todo <span class="cnt"></span></div>
+          <div class="pcol-body">
+            <div class="pcard"><div class="kt">Design the empty states</div><div class="km"><span class="tag ui">UI</span><span class="kid">#4</span></div></div>
+            <div class="pcard"><div class="kt">Kill the modal maze</div><div class="km"><span class="tag feat">Feature</span><span class="kid">#7</span></div></div>
+            <div class="pcard"><div class="kt">Interview 3 beta testers</div><div class="km"><span class="tag feat">Feature</span><span class="kid">#9</span></div></div>
+          </div>
+          <button class="addcard" id="addCard">+ New card</button>
+        </div>
+        <div class="pcol" data-col="doing">
+          <div class="col-head"><span class="sig warning"></span>Doing <span class="cnt"></span></div>
+          <div class="pcol-body">
+            <div class="pcard"><div class="kt">Ship the landing page</div><div class="km"><span class="tag feat">Feature</span><span class="kid">#12</span></div></div>
+          </div>
+        </div>
+        <div class="pcol" data-col="done">
+          <div class="col-head"><span class="sig success"></span>Done <span class="cnt"></span></div>
+          <div class="pcol-body">
+            <div class="pcard"><div class="kt">Pick a very good name</div><div class="km"><span class="tag feat">Feature</span><span class="kid">#1</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="play-tip">tip: "Done" has confetti. just saying.</p>
+  </section>
+
+  <!-- ═══ FLAVORS ═══ -->
+  <section class="block rv" id="boards">
+    <span class="kicker" data-scramble>One canvas, four flows</span>
+    <h2>Everything is a board.</h2>
+    <p class="lede">No modules, no plugins, no seventeen views. Pick a flavor and start dragging. Every board stays this fast and this quiet.</p>
+    <div class="grid4" id="tiles">
+      <div class="tile">
+        <div class="glyph" aria-hidden="true"><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:32px;--hh:20px"></i><i style="--h:22px;--hh:38px"></i></div>
+        <h3>Tasks</h3><p>A personal kanban that stays out of your way. Todo, doing, done. With confetti when it counts.</p>
+      </div>
+      <div class="tile">
+        <div class="glyph" aria-hidden="true"><i style="--h:22px;--hh:36px"></i><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:32px;--hh:18px"></i></div>
+        <h3>Tickets</h3><p>Triage incoming work with severity, categories and owners, without the enterprise ceremony.</p>
+      </div>
+      <div class="tile">
+        <div class="glyph" aria-hidden="true"><i style="--h:32px;--hh:20px"></i><i style="--h:22px;--hh:34px"></i><i class="hot" style="--h:50px;--hh:56px"></i></div>
+        <h3>Roadmaps</h3><p>Now, next, later. Share it publicly and let users watch ideas travel to shipped.</p>
+      </div>
+      <div class="tile">
+        <div class="glyph" aria-hidden="true"><i class="hot" style="--h:42px;--hh:30px"></i><i class="hot" style="--h:50px;--hh:56px"></i><i style="--h:26px;--hh:40px"></i></div>
+        <h3>Beta testing</h3><p>Collect bugs from testers with screenshots and intensity, then hand them straight to an agent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ AGENT SETUP (centered, real logos, live terminal) ═══ -->
+  <section class="block rv center" id="agents">
+    <span class="kicker" data-scramble>Fix with an agent</span>
+    <h2>Thirty seconds to hands-free.</h2>
+    <p class="lede">Canflow ships an MCP server. One command connects Claude Code or Codex. Then <em style="color:var(--text);font-style:italic">"Fix Canflow issue #42"</em> is a complete workflow. The agent pulls the card, patches the code, and moves it along your board.</p>
+
+    <div class="term-live" id="termLive">
+      <div class="th">
+        <span class="tabdot"></span> zsh / claude
+        <button class="copy-btn cp" data-copy="claude mcp add canflow --env CANFLOW_TOKEN=cf_your_token -- npx -y canflow-mcp">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+      <pre id="termLivePre"></pre>
+    </div>
+
+    <div class="agents-row">
+      <span>Works with</span>
+      <span class="lg"><img src="assets/claudecode-color.png" alt="Claude Code" />Claude Code</span>
+      <span class="lg"><img src="assets/codex.webp" alt="Codex" />Codex</span>
+      <span>and any MCP client</span>
+    </div>
+  </section>
+
+  <!-- ═══ DETAILS ═══ -->
+  <section class="block rv" id="details">
+    <span class="kicker" data-scramble>Small things, done loudly</span>
+    <h2>Every card here does something.</h2>
+    <p class="lede">We don't do feature lists. We do features. Click around.</p>
+    <div class="grid2x2" id="dtiles">
+      <div class="dtile">
+        <span class="try">try me</span>
+        <h3>Dark mode, obviously</h3>
+        <p>Semantic tokens all the way down. Light and dark aren't themes, they're the same design breathing. This switch flips the whole page.</p>
+        <button class="switch" id="tileSwitch" aria-label="Toggle dark mode"><i></i></button>
+      </div>
+      <div class="dtile">
+        <span class="try">try me</span>
+        <h3>Public boards</h3>
+        <p>Flip any board public and it's a link. Roadmap voyeurs, beta testers, your future self. Read-only, no account needed.</p>
+        <span class="chipline"><span style="color:var(--success)">●</span> canflow.app/public/acme-roadmap
+          <button class="copy-btn" data-copy="https://canflow.app/public/acme-roadmap">Copy</button>
+        </span>
+      </div>
+      <div class="dtile">
+        <span class="try">try me</span>
+        <h3>An API your agent already speaks</h3>
+        <p>Tokens live in Settings → Developer. The MCP server is on npm. Your agent's onboarding is one paste away.</p>
+        <span class="chipline">npx -y canflow-mcp
+          <button class="copy-btn" data-copy="claude mcp add canflow --env CANFLOW_TOKEN=cf_your_token -- npx -y canflow-mcp">Copy</button>
+        </span>
+      </div>
+      <div class="dtile">
+        <span class="try">try me</span>
+        <h3>Confetti, included</h3>
+        <p>Shipping should feel like something. Every card that lands in Done gets a small, tasteful celebration. Non-negotiable.</p>
+        <button class="btn btn-outline" id="confettiBtn" style="height:34px;position:relative;z-index:2">Ship something</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="cta rv">
+    <div class="hero-dots" aria-hidden="true"></div>
+    <div style="position:relative">
+      <div class="bars" id="ctaBars">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect class="b1" x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect class="b2" x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect class="b3" x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+      </div>
+      <h2 style="margin-top:28px">Less board. More flow.</h2>
+      <p class="lede" style="margin-left:auto;margin-right:auto;text-align:center">Your first board takes a minute. Your agents are already waiting.</p>
+      <div class="hero-ctas" style="margin-top:28px">
+        <a class="btn btn-primary magnet" href="https://canflow.app" style="height:46px;padding:0 28px;font-size:14px">Get started. It's free.</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span style="display:flex;align-items:center;gap:8px">
+      <svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="var(--accent)"/><rect x="24" y="24" width="16" height="52" rx="4" fill="var(--accent-fg)"/><rect x="46" y="24" width="16" height="34" rx="4" fill="var(--accent-fg)"/><rect x="68" y="24" width="8" height="24" rx="3" fill="var(--accent-fg)"/></svg>
+      © 2026 Canflow
+    </span>
+    <span class="mono" style="font-size:10.5px;letter-spacing:.08em">MADE FOR PEOPLE WHO SHIP</span>
+    <div class="links">
+      <a href="https://canflow.app">Open app</a>
+      <a href="#agents">MCP</a>
+      <a href="#details">Details</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return [].slice.call((c || document).querySelectorAll(s)); };
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia("(pointer: fine)").matches;
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var easeIO = function (t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; };
+
+  /* ═══ theme ═══ */
+  var root = document.documentElement;
+  var saved = localStorage.getItem("cf-theme");
+  var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  function applyTheme() {
+    root.classList.toggle("dark", dark);
+    $("#iconSun").style.display = dark ? "none" : "";
+    $("#iconMoon").style.display = dark ? "" : "none";
+    var sw = $("#tileSwitch"); if (sw) sw.classList.toggle("on", dark);
+  }
+  function toggleTheme() { dark = !dark; localStorage.setItem("cf-theme", dark ? "dark" : "light"); applyTheme(); }
+  applyTheme();
+  $("#themeToggle").addEventListener("click", toggleTheme);
+  $("#tileSwitch").addEventListener("click", toggleTheme);
+
+  /* ═══ copy buttons ═══ */
+  $$(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(function () {
+        var old = btn.innerHTML;
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.innerHTML = old; }, 1400);
+      });
+    });
+  });
+
+  /* ═══ reveal on scroll ═══ */
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold: .1 });
+  $$(".rv").forEach(function (el) { io.observe(el); });
+
+  /* ═══ scramble kickers ═══ */
+  var GLYPHS = "▪▫/\\|=+*·-_";
+  var so = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      so.unobserve(e.target);
+      if (reduced) return;
+      var el = e.target, final = el.textContent, frame = 0;
+      var iv = setInterval(function () {
+        frame++;
+        var done = Math.floor(final.length * frame / 14);
+        var out = "";
+        for (var i = 0; i < final.length; i++) {
+          out += i < done ? final[i] : (final[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0]);
+        }
+        el.textContent = out;
+        if (done >= final.length) { clearInterval(iv); el.textContent = final; }
+      }, 34);
+    });
+  }, { threshold: .5 });
+  $$("[data-scramble]").forEach(function (el) { so.observe(el); });
+
+  /* ═══ magnetic buttons ═══ */
+  if (finePointer && !reduced) {
+    $$(".magnet").forEach(function (b) {
+      b.addEventListener("mousemove", function (e) {
+        var r = b.getBoundingClientRect();
+        var x = (e.clientX - r.left - r.width / 2) / (r.width / 2);
+        var y = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+        b.style.transform = "translate(" + x * 3.5 + "px," + y * 3 + "px)";
+      });
+      b.addEventListener("mouseleave", function () { b.style.transform = ""; });
+    });
+  }
+
+  /* ═══ spotlight tiles ═══ */
+  if (finePointer) {
+    $$(".tile, .dtile").forEach(function (t) {
+      t.addEventListener("mousemove", function (e) {
+        var r = t.getBoundingClientRect();
+        t.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        t.style.setProperty("--my", (e.clientY - r.top) + "px");
+      });
+    });
+  }
+
+  /* ═══ confetti ═══ */
+  var cv = $("#confettiCanvas"), cx = cv.getContext("2d"), parts = [];
+  function sizeCanvas() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; cx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
+  sizeCanvas(); addEventListener("resize", sizeCanvas);
+  function burst(x, y, n, opts) {
+    if (reduced) return;
+    opts = opts || {};
+    var colors = ["#2f6feb", "#2f9e6f", "#c98a1b", "#d23f3f", getComputedStyle(root).getPropertyValue("--text").trim()];
+    for (var i = 0; i < (n || 28); i++) {
+      var a, sp;
+      if (opts.up) {
+        a = -Math.PI / 2 + (Math.random() - .5) * (opts.spread || Math.PI * 0.8);
+        sp = (opts.min || 9) + Math.random() * (opts.max || 10);
+      } else {
+        a = Math.random() * Math.PI * 2;
+        sp = 2.5 + Math.random() * 5;
+      }
+      parts.push({
+        x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        w: 4 + Math.random() * 5, h: 3 + Math.random() * 4,
+        r: Math.random() * Math.PI, vr: (Math.random() - .5) * .35,
+        c: colors[(Math.random() * colors.length) | 0], life: 1, g: opts.g || .18
+      });
+    }
+  }
+  /* full-viewport confetti burst */
+  function bigConfetti() {
+    if (reduced) return;
+    var y = innerHeight - 20;
+    // three launch points across the viewport, staggered
+    [0.18, 0.5, 0.82].forEach(function (fx, i) {
+      setTimeout(function () {
+        burst(innerWidth * fx, y, 55, { up: true, spread: Math.PI * 0.75, min: 12, max: 14, g: .22 });
+      }, i * 140);
+    });
+  }
+  var canvasClean = true;
+  function drawConfetti() {
+    if (!parts.length) {
+      if (!canvasClean) { cx.clearRect(0, 0, innerWidth, innerHeight); canvasClean = true; }
+      return;
+    }
+    canvasClean = false;
+    cx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(function (p) { return p.life > 0 && p.y < innerHeight + 40; });
+    parts.forEach(function (p) {
+      p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .992; p.r += p.vr; p.life -= .009;
+      cx.save(); cx.globalAlpha = clamp(p.life, 0, 1); cx.translate(p.x, p.y); cx.rotate(p.r);
+      cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore();
+    });
+  }
+  $("#confettiBtn").addEventListener("click", bigConfetti);
+
+  /* ═══ hero: draggable "move" word ═══ */
+  var word = $("#dragWord");
+  if (word && !reduced) {
+    var wd = false, wsx = 0, wsy = 0, wdx = 0, wdy = 0;
+    word.addEventListener("pointerdown", function (e) {
+      wd = true; wsx = e.clientX; wsy = e.clientY;
+      word.setPointerCapture(e.pointerId); word.style.transition = "none"; e.preventDefault();
+    });
+    word.addEventListener("pointermove", function (e) {
+      if (!wd) return;
+      wdx = e.clientX - wsx; wdy = e.clientY - wsy;
+      word.style.transform = "translate(" + wdx + "px," + wdy + "px) rotate(" + (-2 + wdx * .02) + "deg)";
+    });
+    function wrel() {
+      if (!wd) return; wd = false;
+      word.style.transition = "transform .55s cubic-bezier(.2,1.6,.35,1)";
+      word.style.transform = "rotate(-2deg)";
+    }
+    word.addEventListener("pointerup", wrel);
+    word.addEventListener("pointercancel", wrel);
+  }
+
+  /* ═══ hero: settle the 3D tilt after paint + cursor parallax ═══ */
+  var heroFrame = $("#heroFrame");
+  var hero = $("#hero");
+  if (heroFrame && !reduced) {
+    setTimeout(function () { heroFrame.classList.add("settled"); }, 250);
+    if (finePointer) {
+      hero.addEventListener("mousemove", function (e) {
+        if (!heroFrame.classList.contains("settled")) return;
+        var r = hero.getBoundingClientRect();
+        var nx = (e.clientX - r.left) / r.width - 0.5;
+        var ny = (e.clientY - r.top) / r.height - 0.5;
+        var rx = 6 - ny * 4;   // base tilt 6°, ±4°
+        var rz = -0.3 - nx * 0.6;
+        heroFrame.style.transform = "rotateX(" + rx + "deg) rotateZ(" + rz + "deg)";
+      });
+      hero.addEventListener("mouseleave", function () {
+        heroFrame.style.transform = "";
+      });
+    }
+  } else if (heroFrame) {
+    heroFrame.classList.add("settled");
+  }
+
+  /* ═══ hero: cursor demo — Claude Code picks up the card and ships it ═══ */
+  var traveler = $("#heroTraveler");
+  var cursor = $("#heroCursor");
+  var heroAgentLabel = $("#heroAgentLabel");
+  var doingCol = $('.hf-col[data-col="doing"]');
+  var shippedCol = $('.hf-col[data-col="shipped"]');
+  var reportedCol = $('.hf-col[data-col="reported"]');
+  function centerOfCol(colEl) {
+    var f = $(".hf-board").getBoundingClientRect();
+    var r = colEl.getBoundingClientRect();
+    return { x: r.left - f.left + r.width * 0.5 - 10, y: r.top - f.top + 60 };
+  }
+  function heroLoop() {
+    if (reduced) return;
+    // Phase 1: cursor arrives from top-left, hovers over the doing card
+    var traveling = traveler; // stays in Doing column initially
+    var pDoing = centerOfCol(doingCol);
+    var pShipped = centerOfCol(shippedCol);
+    var pReported = centerOfCol(reportedCol);
+
+    // step 1 — cursor appears near Doing
+    cursor.style.transform = "translate(" + (pDoing.x + 40) + "px," + (pDoing.y + 30) + "px)";
+    setTimeout(function () { cursor.classList.add("show"); }, 200);
+    // step 2 — after a beat, "ship" the card: move it to Shipped column, cursor follows
+    setTimeout(function () {
+      cursor.style.transform = "translate(" + (pDoing.x + 10) + "px," + (pDoing.y + 5) + "px)";
+    }, 900);
+    setTimeout(function () {
+      // append to shipped
+      shippedCol.insertBefore(traveling, shippedCol.querySelector(".hf-card"));
+      traveler.classList.add("done");
+      heroAgentLabel.textContent = "Fixed by Claude Code · PR #118";
+      cursor.style.transform = "translate(" + (pShipped.x + 10) + "px," + (pShipped.y + 5) + "px)";
+      // subtle confetti burst at the card's location
+      var r = traveler.getBoundingClientRect();
+      if (r.top < innerHeight && r.bottom > 0) {
+        burst(r.left + r.width / 2, r.top + 30, 22);
+      }
+    }, 2000);
+    // step 3 — cursor leaves
+    setTimeout(function () {
+      cursor.classList.remove("show");
+    }, 3600);
+    // step 4 — reset: put the card back to Doing, remove done state
+    setTimeout(function () {
+      doingCol.appendChild(traveling);
+      traveler.classList.remove("done");
+      heroAgentLabel.textContent = "Claude Code is on it";
+    }, 4600);
+    setTimeout(heroLoop, 6200);
+  }
+  setTimeout(heroLoop, 1400);
+
+  function physTick() { /* removed physics — hero no longer has floating cards */ }
+
+  /* ═══ agents section: live typewriter terminal ═══ */
+  var pre = $("#termLivePre");
+  if (pre) {
+    // steps: { html: string, type: bool, delayAfter: ms }
+    var STEPS = [
+      { html: '<span class="dim">$</span> ', type: false, delayAfter: 250 },
+      { html: 'claude mcp add canflow \\\n    <span class="dim">--</span>env CANFLOW_TOKEN=<span class="str">cf_your_token</span> \\\n    <span class="dim">--</span> npx -y canflow-mcp', type: true, speed: 22, delayAfter: 500 },
+      { html: '\n<span class="g">✓</span> canflow connected · <span class="c">3</span> tools ready\n', type: false, delayAfter: 900 },
+      { html: '<span class="dim">❯</span> ', type: false, delayAfter: 250 },
+      { html: 'claude <span class="c">"Fix Canflow issue #42"</span>', type: true, speed: 30, delayAfter: 550 },
+      { html: '\n<span class="b">●</span> canflow · get_issue <span class="c">#42</span>\n', type: false, delayAfter: 550 },
+      { html: '<span class="b">●</span> canflow · move_issue #42 → <span class="y">Fixing</span>\n', type: false, delayAfter: 700 },
+      { html: '<span class="dim">✻</span> patching <span class="c">src/auth/callback.ts</span>\n', type: false, delayAfter: 800 },
+      { html: '<span class="g">✓</span> 12/12 tests pass · PR <span class="c">#118</span>\n', type: false, delayAfter: 600 },
+      { html: '<span class="b">●</span> canflow · move_issue #42 → <span class="g">Shipped</span>\n', type: false, delayAfter: 2200 }
+    ];
+
+    function stripHTML(s) {
+      var d = document.createElement("div"); d.innerHTML = s; return d.textContent;
+    }
+    var caret = '<span class="caret"></span>';
+
+    function runTerm() {
+      pre.innerHTML = caret;
+      var buf = "";
+      var i = 0;
+      function nextStep() {
+        if (i >= STEPS.length) {
+          setTimeout(runTerm, 800);
+          return;
+        }
+        var step = STEPS[i++];
+        if (!step.type) {
+          buf += step.html;
+          pre.innerHTML = buf + caret;
+          setTimeout(nextStep, step.delayAfter || 300);
+        } else {
+          // type character-by-character but preserve tags
+          typeInto(step.html, buf, function (final) {
+            buf = final;
+            pre.innerHTML = buf + caret;
+            setTimeout(nextStep, step.delayAfter || 300);
+          }, step.speed || 24);
+        }
+      }
+      nextStep();
+    }
+
+    // typeInto: types a mixed html/text string char by char into pre, preserving open tags
+    function typeInto(html, prefix, done, speed) {
+      // parse into tokens: either literal chars or full <tag>...</tag> segments? Simpler:
+      // walk char by char; when we hit '<', capture until '>' and emit whole tag instantly.
+      var idx = 0;
+      var live = prefix;
+      function step() {
+        if (idx >= html.length) { done(live); return; }
+        if (html[idx] === "<") {
+          // append the whole tag at once
+          var end = html.indexOf(">", idx);
+          if (end === -1) end = html.length - 1;
+          live += html.slice(idx, end + 1);
+          idx = end + 1;
+          pre.innerHTML = live + caret;
+          step();
+          return;
+        }
+        // append one char
+        live += html[idx++];
+        pre.innerHTML = live + caret;
+        setTimeout(step, speed);
+      }
+      step();
+    }
+
+    // start when in view; pause when out
+    var termIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { termIO.unobserve(e.target); if (!reduced) runTerm(); else pre.innerHTML = STEPS.map(function(s){return s.html;}).join(""); }
+      });
+    }, { threshold: 0.3 });
+    termIO.observe($("#agents"));
+  }
+
+  /* ═══ THE STORY (scroll-scrubbed) ═══ */
+  var story = $("#story"), stage = $("#stage"), sCard = $("#storyCard");
+  var docks = [$("#dock0"), $("#dock1"), $("#dock2")];
+  var TERM = [
+    '<span class="p">❯</span> <span class="c">claude</span> "Fix Canflow issue #42"',
+    '<span class="b">●</span> canflow · get_issue <span class="c">#42</span> <span class="p">→</span> title, repro, screenshot',
+    '<span class="b">●</span> canflow · move_issue #42 → <span class="y">Fixing</span>',
+    '<span class="p">✻</span> reading <span class="c">src/auth/callback.ts</span>',
+    '<span class="p">✻</span> patching redirect guard …',
+    '<span class="g">✓</span> 12/12 tests pass · PR <span class="c">#118</span> opened',
+    '<span class="b">●</span> canflow · move_issue #42 → <span class="g">Shipped</span>'
+  ];
+  var termBox = $("#termLines");
+  var tlines = TERM.map(function (h, i) {
+    var d = document.createElement("div");
+    d.className = "tline" + (i === 3 || i === 4 ? " m-hide" : "");
+    d.innerHTML = h; termBox.appendChild(d); return d;
+  });
+  var TERM_AT = [.24, .29, .34, .40, .46, .52, .56];
+
+  var dockRects = [null, null, null];
+  function layoutDocks() {
+    var w = docks[0].getBoundingClientRect().width;
+    sCard.style.width = w + "px";
+    var h = sCard.offsetHeight;
+    docks.forEach(function (d) { d.style.height = (h + 2) + "px"; });
+    var s = stage.getBoundingClientRect();
+    docks.forEach(function (d, i) {
+      var r = d.getBoundingClientRect();
+      dockRects[i] = { x: r.left - s.left + 1, y: r.top - s.top + 1, w: r.width };
+    });
+    lastP = -1;
+  }
+  function dockPos(i) { return dockRects[i]; }
+  var storyFired = false, lastP = -1;
+
+  function storyTick() {
+    var vh = innerHeight;
+    var rect = story.getBoundingClientRect();
+    var total = rect.height - vh;
+    var p = clamp(-rect.top / Math.max(total, 1), 0, 1);
+    if (reduced) p = 0;
+    if (Math.abs(p - lastP) < 0.0004) return;
+    lastP = p;
+
+    var A = .08, B = .20, C = .55, D = .68;
+    var pos, arc = 0;
+    if (p < A) pos = dockPos(0);
+    else if (p < B) {
+      var t = easeIO((p - A) / (B - A));
+      var p0 = dockPos(0), p1 = dockPos(1);
+      pos = { x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t, w: p0.w + (p1.w - p0.w) * t };
+      arc = Math.sin(t * Math.PI);
+    } else if (p < C) pos = dockPos(1);
+    else if (p < D) {
+      var t2 = easeIO((p - C) / (D - C));
+      var pa = dockPos(1), pb = dockPos(2);
+      pos = { x: pa.x + (pb.x - pa.x) * t2, y: pa.y + (pb.y - pa.y) * t2, w: pa.w + (pb.w - pa.w) * t2 };
+      arc = Math.sin(t2 * Math.PI);
+    } else pos = dockPos(2);
+
+    sCard.style.left = pos.x + "px";
+    sCard.style.top = pos.y + "px";
+    sCard.style.width = pos.w + "px";
+    sCard.style.transform = arc ? "rotate(" + (-3.5 * arc) + "deg) scale(" + (1 + .04 * arc) + ")" : "";
+    sCard.style.boxShadow = arc ? "var(--sh-3)" : "";
+
+    sCard.classList.toggle("working", p >= B && p < D);
+    sCard.classList.toggle("done", p >= C + .04);
+    $("#agentLabel").textContent = p >= C + .04 ? "Fixed by Claude Code · PR #118" : "Claude Code is on it";
+    $("#testerToast").classList.toggle("on", p > .015 && p < .14);
+
+    docks.forEach(function (d, i) {
+      var hot = (i === 0 && p < A) || (i === 1 && p >= A && p < C) || (i === 2 && p >= C);
+      d.classList.toggle("hot", hot && p > .01);
+    });
+
+    tlines.forEach(function (l, i) { l.classList.toggle("show", p >= TERM_AT[i]); });
+
+    var phase = p < B ? 0 : (p < D ? 1 : 2);
+    $$(".story-head .ph").forEach(function (h) { h.classList.toggle("on", +h.getAttribute("data-ph") === phase); });
+
+    $("#rfill1").style.transform = "scaleX(" + clamp((p - A) / (B - A), 0, 1) + ")";
+    $("#rfill2").style.transform = "scaleX(" + clamp((p - C) / (D - C), 0, 1) + ")";
+    $$("#rail .rstep").forEach(function (s, i) {
+      s.classList.toggle("on", (i === 0) || (i === 1 && p >= B) || (i === 2 && p >= D));
+    });
+    $("#epilogue").classList.toggle("on", p > .74);
+
+    if (p >= D + .02 && !storyFired) {
+      storyFired = true;
+      var d2 = docks[2].getBoundingClientRect();
+      burst(d2.left + d2.width / 2, d2.top + d2.height / 2, 30);
+    }
+    if (p < C) storyFired = false;
+  }
+
+  layoutDocks();
+  addEventListener("resize", layoutDocks);
+  setTimeout(layoutDocks, 400);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutDocks);
+
+  if (reduced) {
+    tlines.forEach(function (l) { l.classList.add("show"); });
+    sCard.classList.add("working", "done");
+    var d0 = dockPos(2);
+    sCard.style.left = d0.x + "px"; sCard.style.top = d0.y + "px";
+    $$("#rail .rstep").forEach(function (s) { s.classList.add("on"); });
+    $("#epilogue").classList.add("on");
+  }
+
+  /* ═══ playable board ═══ */
+  var board = $("#playBoard");
+  var FUN = ["Pet the office dog", "Rename final_v2_FINAL.fig", "Archive 400 Slack drafts", "Water the plants", "Invent a company holiday", "Unsubscribe from everything", "Find the good pen", "Alphabetize the emoji"];
+  var funIdx = 0, cardNo = 13;
+  function updateCounts() {
+    $$(".pcol", board).forEach(function (col) {
+      $(".cnt", col).textContent = $$(".pcard", col).length;
+    });
+  }
+  updateCounts();
+
+  $("#addCard").addEventListener("click", function () {
+    var d = document.createElement("div");
+    d.className = "pcard";
+    d.innerHTML = '<div class="kt">' + FUN[funIdx++ % FUN.length] + '</div><div class="km"><span class="tag feat">Feature</span><span class="kid">#' + (cardNo++) + "</span></div>";
+    d.style.opacity = "0"; d.style.transform = "translateY(6px)";
+    $('.pcol[data-col="todo"] .pcol-body', board).appendChild(d);
+    requestAnimationFrame(function () {
+      d.style.transition = "opacity .3s, transform .3s cubic-bezier(.22,1,.36,1)";
+      d.style.opacity = "1"; d.style.transform = "none";
+    });
+    bindDrag(d);
+    updateCounts();
+  });
+
+  function bindDrag(cardEl) {
+    cardEl.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0 && e.pointerType === "mouse") return;
+      var r = cardEl.getBoundingClientRect();
+      var offX = e.clientX - r.left, offY = e.clientY - r.top;
+      var ph = document.createElement("div");
+      ph.className = "ph-slot"; ph.style.height = r.height + "px";
+      cardEl.parentNode.insertBefore(ph, cardEl);
+      cardEl.classList.add("drag");
+      cardEl.style.width = r.width + "px";
+      cardEl.style.left = r.left + "px"; cardEl.style.top = r.top + "px";
+      cardEl.setPointerCapture(e.pointerId);
+      var hotCol = null;
+      e.preventDefault();
+
+      function mv(ev) {
+        cardEl.style.left = (ev.clientX - offX) + "px";
+        cardEl.style.top = (ev.clientY - offY) + "px";
+        var under = document.elementFromPoint(ev.clientX, ev.clientY);
+        var col = under && under.closest ? under.closest(".pcol") : null;
+        if (col !== hotCol) {
+          if (hotCol) hotCol.classList.remove("hot");
+          hotCol = col; if (hotCol) hotCol.classList.add("hot");
+        }
+      }
+      function up() {
+        cardEl.removeEventListener("pointermove", mv);
+        cardEl.removeEventListener("pointerup", up);
+        cardEl.removeEventListener("pointercancel", up);
+        var target = hotCol ? $(".pcol-body", hotCol) : null;
+        if (hotCol) hotCol.classList.remove("hot");
+        var from = cardEl.getBoundingClientRect();
+        cardEl.classList.remove("drag");
+        cardEl.style.width = ""; cardEl.style.left = ""; cardEl.style.top = "";
+        if (target) target.appendChild(cardEl);
+        else ph.parentNode.insertBefore(cardEl, ph);
+        ph.remove();
+        var to = cardEl.getBoundingClientRect();
+        if (!reduced) {
+          cardEl.style.transition = "none";
+          cardEl.style.transform = "translate(" + (from.left - to.left) + "px," + (from.top - to.top) + "px) rotate(-3deg)";
+          requestAnimationFrame(function () {
+            cardEl.style.transition = "transform .35s cubic-bezier(.22,1,.36,1)";
+            cardEl.style.transform = "";
+            setTimeout(function () { cardEl.style.transition = ""; }, 380);
+          });
+        }
+        if (target && target.closest(".pcol").getAttribute("data-col") === "done") {
+          burst(to.left + to.width / 2, to.top + to.height / 2, 26);
+        }
+        updateCounts();
+      }
+      cardEl.addEventListener("pointermove", mv);
+      cardEl.addEventListener("pointerup", up);
+      cardEl.addEventListener("pointercancel", up);
+    });
+  }
+  $$(".pcard", board).forEach(bindDrag);
+
+  /* ═══ CTA bars equalizer ═══ */
+  var ctaBars = $("#ctaBars");
+  if (ctaBars && !reduced) {
+    var bio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var b1 = $(".b1", ctaBars), b2 = $(".b2", ctaBars), b3 = $(".b3", ctaBars);
+        var iv = setInterval(function () {
+          [b1, b2, b3].forEach(function (b) {
+            var h = 22 + Math.random() * 32;
+            b.setAttribute("height", h); b.setAttribute("y", 76 - h);
+          });
+        }, 700);
+        setTimeout(function () {
+          clearInterval(iv);
+          b1.setAttribute("height", 52); b1.setAttribute("y", 24);
+          b2.setAttribute("height", 34); b2.setAttribute("y", 24);
+          b3.setAttribute("height", 24); b3.setAttribute("y", 24);
+        }, 4300);
+        bio.unobserve(e.target);
+      });
+    }, { threshold: .6 });
+    bio.observe(ctaBars);
+  }
+
+  /* ═══ main loop ═══ */
+  function loop(now) {
+    physTick(now || 0);
+    if (!reduced) storyTick();
+    drawConfetti();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
