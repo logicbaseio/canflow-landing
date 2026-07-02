@@ -69,24 +69,26 @@
   .btn-outline { border:1px solid var(--border); background:var(--surface); color:var(--text); }
   .btn-outline:hover { background:var(--surface-2); }
 
-  /* ── nav (inverted: dark in light theme, light in dark theme) ── */
+  /* ── nav: transparent at top, inverted dark/light bar once scrolled ── */
   nav {
-    /* invert tokens against page theme */
+    position:sticky; top:0; z-index:100;
+    background:transparent;
+    border-bottom:1px solid transparent;
+    transition:background .35s cubic-bezier(.22,1,.36,1), border-color .35s;
+  }
+  /* Inverted colour tokens only activate on scroll */
+  nav.scrolled {
     --nav-bg: #17171a;
     --nav-text: #f5f5f7;
     --nav-muted: rgba(255,255,255,.65);
     --nav-border: rgba(255,255,255,.09);
     --nav-hover: rgba(255,255,255,.08);
-    /* remap accent inside nav so brand SVG + primary btn flip too */
     --accent: var(--nav-text);
     --accent-fg: var(--nav-bg);
-
-    position:sticky; top:0; z-index:100;
     background:var(--nav-bg);
-    border-bottom:1px solid var(--nav-border);
-    color:var(--nav-text);
+    border-bottom-color:var(--nav-border);
   }
-  .dark nav {
+  .dark nav.scrolled {
     --nav-bg: #f5f5f7;
     --nav-text: #1d1d1f;
     --nav-muted: rgba(0,0,0,.62);
@@ -94,21 +96,36 @@
     --nav-hover: rgba(0,0,0,.06);
   }
   .nav-inner { display:flex; align-items:center; justify-content:space-between; height:40px; }
-  .brand { display:flex; align-items:center; gap:8px; font-weight:600; font-size:12.5px; letter-spacing:-.015em; color:var(--nav-text); }
+
+  .brand {
+    display:flex; align-items:center; gap:8px;
+    font-weight:600; font-size:12.5px; letter-spacing:-.015em;
+    color:var(--text);
+    transition:color .35s;
+  }
   .brand svg { height:18px; width:18px; }
+  nav.scrolled .brand { color:var(--nav-text); }
+
   .nav-right { display:flex; align-items:center; gap:6px; }
   .icon-btn {
     display:inline-flex; align-items:center; justify-content:center; height:24px; width:24px;
-    border-radius:4px; cursor:pointer; background:transparent; border:none; color:var(--nav-muted);
-    transition:background .15s, color .15s;
+    border-radius:4px; cursor:pointer; background:transparent; border:none;
+    color:var(--text-muted);
+    transition:background .15s, color .35s;
   }
-  .icon-btn:hover { background:var(--nav-hover); color:var(--nav-text); }
-  /* buttons in nav pick up inverted colors via btn-outline/btn-primary defaults */
-  nav .btn { height:26px; padding:0 12px; font-size:12px; border-radius:4px; }
+  .icon-btn:hover { background:var(--surface-2); color:var(--text); }
+  nav.scrolled .icon-btn { color:var(--nav-muted); }
+  nav.scrolled .icon-btn:hover { background:var(--nav-hover); color:var(--nav-text); }
+
+  nav .btn { height:26px; padding:0 12px; font-size:12px; border-radius:4px; transition:background .15s, color .35s, border-color .35s, opacity .15s; }
   nav .btn-outline {
-    background:transparent; color:var(--nav-text); border-color:var(--nav-border);
+    background:transparent; color:var(--text); border-color:var(--border);
   }
-  nav .btn-outline:hover { background:var(--nav-hover); }
+  nav .btn-outline:hover { background:var(--surface-2); }
+  nav.scrolled .btn-outline { color:var(--nav-text); border-color:var(--nav-border); }
+  nav.scrolled .btn-outline:hover { background:var(--nav-hover); }
+  /* btn-primary picks up --accent, which comes from page tokens when unscrolled
+     and from nav.scrolled overrides when scrolled — so it flips automatically */
 
   /* ── HERO: bold type + a floating live board preview ── */
   .hero { position:relative; padding:88px 0 60px; overflow:hidden; }
@@ -1485,6 +1502,14 @@
   applyTheme();
   $("#themeToggle").addEventListener("click", toggleTheme);
   $("#tileSwitch").addEventListener("click", toggleTheme);
+
+  /* ═══ sticky-scroll nav (transparent at top, inverted band once scrolled) ═══ */
+  var navEl = document.querySelector("nav");
+  function updateNavScroll() {
+    navEl.classList.toggle("scrolled", window.scrollY > 32);
+  }
+  updateNavScroll();
+  addEventListener("scroll", updateNavScroll, { passive: true });
 
   /* ═══ copy buttons ═══ */
   $$(".copy-btn").forEach(function (btn) {
