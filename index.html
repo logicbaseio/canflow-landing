@@ -69,22 +69,46 @@
   .btn-outline { border:1px solid var(--border); background:var(--surface); color:var(--text); }
   .btn-outline:hover { background:var(--surface-2); }
 
-  /* ── nav ── */
+  /* ── nav (inverted: dark in light theme, light in dark theme) ── */
   nav {
+    /* invert tokens against page theme */
+    --nav-bg: #17171a;
+    --nav-text: #f5f5f7;
+    --nav-muted: rgba(255,255,255,.65);
+    --nav-border: rgba(255,255,255,.09);
+    --nav-hover: rgba(255,255,255,.08);
+    /* remap accent inside nav so brand SVG + primary btn flip too */
+    --accent: var(--nav-text);
+    --accent-fg: var(--nav-bg);
+
     position:sticky; top:0; z-index:100;
-    background:color-mix(in srgb, var(--app) 94%, transparent);
-    border-bottom:1px solid var(--border);
+    background:var(--nav-bg);
+    border-bottom:1px solid var(--nav-border);
+    color:var(--nav-text);
   }
-  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:58px; }
-  .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; letter-spacing:-.02em; }
-  .brand svg { height:26px; width:26px; }
-  .nav-right { display:flex; align-items:center; gap:8px; }
+  .dark nav {
+    --nav-bg: #f5f5f7;
+    --nav-text: #1d1d1f;
+    --nav-muted: rgba(0,0,0,.62);
+    --nav-border: rgba(0,0,0,.09);
+    --nav-hover: rgba(0,0,0,.06);
+  }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:40px; }
+  .brand { display:flex; align-items:center; gap:8px; font-weight:600; font-size:12.5px; letter-spacing:-.015em; color:var(--nav-text); }
+  .brand svg { height:18px; width:18px; }
+  .nav-right { display:flex; align-items:center; gap:6px; }
   .icon-btn {
-    display:inline-flex; align-items:center; justify-content:center; height:34px; width:34px;
-    border-radius:var(--r); cursor:pointer; background:transparent; border:none; color:var(--text-muted);
-    transition:background .15s,color .15s;
+    display:inline-flex; align-items:center; justify-content:center; height:24px; width:24px;
+    border-radius:4px; cursor:pointer; background:transparent; border:none; color:var(--nav-muted);
+    transition:background .15s, color .15s;
   }
-  .icon-btn:hover { background:var(--surface-2); color:var(--text); }
+  .icon-btn:hover { background:var(--nav-hover); color:var(--nav-text); }
+  /* buttons in nav pick up inverted colors via btn-outline/btn-primary defaults */
+  nav .btn { height:26px; padding:0 12px; font-size:12px; border-radius:4px; }
+  nav .btn-outline {
+    background:transparent; color:var(--nav-text); border-color:var(--nav-border);
+  }
+  nav .btn-outline:hover { background:var(--nav-hover); }
 
   /* ── HERO: bold type + a floating live board preview ── */
   .hero { position:relative; padding:88px 0 60px; overflow:hidden; }
@@ -884,8 +908,8 @@
         <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         <svg id="iconMoon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
-      <a class="btn btn-outline" href="https://canflow.app" style="height:34px">Sign in</a>
-      <a class="btn btn-primary magnet" href="https://canflow.app" style="height:34px">Open app</a>
+      <a class="btn btn-outline" href="https://canflow.app">Sign in</a>
+      <a class="btn btn-primary magnet" href="https://canflow.app">Open app</a>
     </div>
   </div>
 </nav>
@@ -1088,7 +1112,7 @@
     <div style="text-align:center;max-width:620px;margin:0 auto">
       <span class="kicker" data-scramble>Three board types</span>
       <h2 style="margin:12px 0 0;font-size:clamp(30px,4.2vw,44px);font-weight:600;letter-spacing:-.04em;line-height:1.1">One canvas. Three ways to ship.</h2>
-      <p class="lede" style="margin:16px auto 0">Every Canflow board runs the same interface — cards, columns, drag. What changes is what each one <em style="font-style:italic;color:#e5e5e8">knows</em>. Pick the type that matches the work.</p>
+      <p class="lede" style="margin:16px auto 0">Every Canflow board runs the same interface: cards, columns, drag. What changes is what each one <em style="font-style:italic;color:#e5e5e8">knows</em>. Pick the type that matches the work.</p>
     </div>
 
     <!-- 01 · Beta testing -->
@@ -1097,11 +1121,11 @@
         <div class="tbrow-tag"><span class="n">01</span> · Beta testing board</div>
         <h3>Where bugs, testers, and agents meet.</h3>
         <p class="body">
-          Ship a build, invite testers <b>by email to any phase</b>, and wire in Claude Code or Codex through MCP. Your agents pick up the same cards testers file — and drag them across the board themselves.
+          Ship a build, invite testers <b>by email to any phase</b>, and wire in Claude Code or Codex through MCP. Your agents pick up the same cards testers file, and drag them across the board themselves.
         </p>
         <ul class="tbrow-features">
-          <li><span class="fdot"></span><span><b>Email invites to any phase</b> — testers, QA leads, or read-only stakeholders.</span></li>
-          <li><span class="fdot"></span><span><b>Claude Code &amp; Codex via MCP</b> — agents move cards as they work.</span></li>
+          <li><span class="fdot"></span><span><b>Email invites to any phase</b>: testers, QA leads, or read-only stakeholders.</span></li>
+          <li><span class="fdot"></span><span><b>Claude Code &amp; Codex via MCP</b>: agents move cards as they work.</span></li>
           <li><span class="fdot"></span><span><b>Screenshots · intensity · repro</b> attached to every bug automatically.</span></li>
         </ul>
       </div>
@@ -1180,12 +1204,12 @@
         <div class="tbrow-tag"><span class="n">02</span> · Roadmap board</div>
         <h3>Your users decide what ships next.</h3>
         <p class="body">
-          Turn any board into a <b>public roadmap</b> with one click. Anyone with the link can upvote what they actually want — no signup, no login. Ideas auto-sort to the top of Planned by real demand.
+          Turn any board into a <b>public roadmap</b> with one click. Anyone with the link can upvote what they actually want. No signup, no login. Ideas auto-sort to the top of Planned by real demand.
         </p>
         <ul class="tbrow-features">
-          <li><span class="fdot"></span><span><b>Public upvotes without a login</b> — one shareable URL, real user demand.</span></li>
+          <li><span class="fdot"></span><span><b>Public upvotes without a login</b>: one shareable URL, real user demand.</span></li>
           <li><span class="fdot"></span><span><b>Auto-sort by vote count</b> so the roadmap reflects the crowd, not the founder.</span></li>
-          <li><span class="fdot"></span><span><b>Drop it in a tweet or a footer</b> — every visit is free market research.</span></li>
+          <li><span class="fdot"></span><span><b>Drop it in a tweet or a footer</b>. Every visit is free market research.</span></li>
         </ul>
       </div>
       <div class="tbrow-preview">
@@ -1278,11 +1302,11 @@
         <div class="tbrow-tag"><span class="n">03</span> · Task &amp; pipeline board</div>
         <h3>The quiet kanban that fits how you actually work.</h3>
         <p class="body">
-          Personal task list. Team sprint board. Or reshape the phases into a <b>sales pipeline</b> — Cold, Contacted, Qualified, Closed. Same interface, custom flow, whatever three columns you need.
+          Personal task list. Team sprint board. Or reshape the phases into a <b>sales pipeline</b>: Cold, Contacted, Qualified, Closed. Same interface, custom flow, whatever three columns you need.
         </p>
         <ul class="tbrow-features">
-          <li><span class="fdot"></span><span><b>Personal or team</b> — invite people or keep it private.</span></li>
-          <li><span class="fdot"></span><span><b>Custom phases &amp; tags</b> — model tasks, deals, or a lead pipeline in minutes.</span></li>
+          <li><span class="fdot"></span><span><b>Personal or team</b>: invite people or keep it private.</span></li>
+          <li><span class="fdot"></span><span><b>Custom phases &amp; tags</b>: model tasks, deals, or a lead pipeline in minutes.</span></li>
           <li><span class="fdot"></span><span><b>Confetti when a card lands in Done.</b> Non-negotiable.</span></li>
         </ul>
       </div>
